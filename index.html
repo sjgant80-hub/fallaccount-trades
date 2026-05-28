@@ -706,24 +706,30 @@ function showReceiptModal(existing) {
 async function handleReceiptPhoto(e) {
   const file = e.target.files[0];
   if (!file) return;
-  // T0: no OCR available in pure sovereign mode. Store image as base64, prompt to fill manually.
-  // T3 (optional): if user has Gemini key, send for vision parse.
-  if (state.settings.geminiKey) {
-    toast('Reading receipt...');
-    try {
-      const base64 = await fileToBase64(file);
-      const out = await geminiVisionParse(base64);
-      if (out) {
-        document.getElementById('rcVendor').value = out.vendor || '';
-        document.getElementById('rcAmount').value = out.amount || '';
-        if (out.date) document.getElementById('rcDate').value = out.date;
-        if (out.category) document.getElementById('rcCategory').value = out.category;
-        toast('Filled in from photo');
-        return;
-      }
-    } catch (e) { /* fall through */ }
+  const tier = await Cascade.detectTier();
+  if (tier === 'T0') {
+    toast('Photo saved — type vendor & amount');
+    document.getElementById('rcVendor').focus();
+    return;
   }
-  toast('Photo saved — type vendor & amount');
+  toast('Reading receipt with ' + tier + '...');
+  try {
+    const base64 = await fileToBase64(file);
+    const out = await Cascade.visionParse(base64);
+    if (out) {
+      if (out.vendor)   document.getElementById('rcVendor').value = out.vendor;
+      if (out.amount)   document.getElementById('rcAmount').value = out.amount;
+      if (out.date)     document.getElementById('rcDate').value = out.date;
+      if (out.category) document.getElementById('rcCategory').value = out.category;
+      if (out.notes && !document.getElementById('rcNotes').value) document.getElementById('rcNotes').value = out.notes;
+      toast('◊ Filled in from photo · via ' + (out._tier || tier));
+      KCC.log('R1', 'photo_parse', 2);
+      return;
+    }
+  } catch (err) {
+    console.warn('vision parse failed', err);
+  }
+  toast('Couldn\'t read it — type the details');
   document.getElementById('rcVendor').focus();
 }
 
@@ -736,38 +742,162 @@ function fileToBase64(file) {
   });
 }
 
-async function geminiVisionParse(base64) {
-  const key = state.settings.geminiKey;
-  if (!key) return null;
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: 'Extract from this UK receipt: vendor name, total amount in £, date (YYYY-MM-DD), and one category from: tools, materials, fuel, vehicle, ppe, site, subcontractor, other. Reply ONLY as JSON: {"vendor":"","amount":0,"date":"","category":""}' },
-            { inlineData: { mimeType: 'image/jpeg', data: base64 } }
-          ]
-        }]
-      })
-    });
-    const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const json = text.match(/\{[\s\S]*?\}/)?.[0];
-    return json ? JSON.parse(json) : null;
-  } catch (e) { return null; }
+// VISION_PROMPT shared across providers · consistent extraction shape
+const VISION_PROMPT = 'You are reading a UK receipt photo for a sole-trader tradesman (builder/plumber/electrician). Extract these fields:\n- vendor: the merchant name (e.g. "Screwfix", "Travis Perkins", "BP Fuel", "Wickes")\n- amount: the TOTAL paid in £, as a number (no symbol, no commas)\n- date: in YYYY-MM-DD format (UK format dd/mm/yyyy → convert to ISO)\n- category: ONE of [tools, materials, fuel, vehicle, ppe, site, subcontractor, other]\n  · tools = Screwfix/Toolstation hand tools, power tools\n  · materials = timber, plumbing fittings, paint, building merchant supplies\n  · fuel = petrol/diesel station\n  · vehicle = MOT/service/tyres/parking/insurance van expenses\n  · ppe = boots, hi-vis, hard hats, gloves, workwear\n  · site = food/refreshments bought on site\n  · subcontractor = paying another tradesman\n  · other = anything else\n- notes: 1-line summary if helpful (e.g. "screws and brackets for kitchen job"), or empty\n\nReply ONLY with this JSON, no other text:\n{"vendor":"","amount":0,"date":"","category":"","notes":""}';
+
+// extract first JSON object from messy LLM output
+function extractJSON(text) {
+  if (!text) return null;
+  const m = String(text).match(/\{[\s\S]*?\}/);
+  if (!m) return null;
+  try { return JSON.parse(m[0]); } catch (e) { return null; }
 }
 
-function parseAndFill() {
+// extend Cascade with vision support
+Cascade.visionParse = async function (base64) {
+  const s = state.settings;
+  // Try providers in priority order: Anthropic > OpenAI > Gemini > OpenRouter > Local
+  if (s.anthropicKey) {
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': s.anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5',
+          max_tokens: 500,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
+              { type: 'text', text: VISION_PROMPT }
+            ]
+          }]
+        })
+      });
+      const d = await r.json();
+      const txt = d?.content?.[0]?.text || '';
+      const out = extractJSON(txt);
+      if (out) { out._tier = 'T3·Claude'; return out; }
+    } catch (e) { /* fall through */ }
+  }
+  if (s.openaiKey) {
+    try {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.openaiKey },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'text', text: VISION_PROMPT },
+              { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64 } }
+            ]
+          }],
+          max_tokens: 500
+        })
+      });
+      const d = await r.json();
+      const txt = d?.choices?.[0]?.message?.content || '';
+      const out = extractJSON(txt);
+      if (out) { out._tier = 'T3·GPT'; return out; }
+    } catch (e) { /* fall through */ }
+  }
+  if (s.geminiKey) {
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${s.geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [
+            { text: VISION_PROMPT },
+            { inlineData: { mimeType: 'image/jpeg', data: base64 } }
+          ]}]
+        })
+      });
+      const d = await r.json();
+      const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const out = extractJSON(txt);
+      if (out) { out._tier = 'T3·Gemini'; return out; }
+    } catch (e) { /* fall through */ }
+  }
+  if (s.openrouterKey) {
+    try {
+      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.openrouterKey, 'HTTP-Referer': location.origin },
+        body: JSON.stringify({
+          model: 'anthropic/claude-haiku-4-5',
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'text', text: VISION_PROMPT },
+              { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + base64 } }
+            ]
+          }],
+          max_tokens: 500
+        })
+      });
+      const d = await r.json();
+      const txt = d?.choices?.[0]?.message?.content || '';
+      const out = extractJSON(txt);
+      if (out) { out._tier = 'T3·OpenRouter'; return out; }
+    } catch (e) { /* fall through */ }
+  }
+  // T2 local Ollama with llava model
+  if (await Cascade._probeLocal()) {
+    try {
+      const r = await fetch('http://127.0.0.1:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'llava', prompt: VISION_PROMPT, images: [base64], stream: false })
+      });
+      const d = await r.json();
+      const out = extractJSON(d?.response || '');
+      if (out) { out._tier = 'T2·local'; return out; }
+    } catch (e) { /* fall through */ }
+  }
+  return null;
+};
+
+// also: smart-text-fill for the manual paste box, using whichever LLM is available
+Cascade.parseReceiptText = async function (text) {
+  if (!text) return null;
+  // Try T0 regex first (instant)
+  const t0 = parseReceiptText(text);
+  // If T0 got a vendor + amount, we're done · fast & free
+  if (t0.vendor && t0.amount > 0 && t0.vendor !== 'Receipt') return { ...t0, _tier: 'T0·rules' };
+  // Otherwise try LLM
+  const tier = await Cascade.detectTier();
+  if (tier === 'T0') return t0;  // best effort
+  const prompt = VISION_PROMPT + '\n\nRECEIPT TEXT:\n' + text;
+  try {
+    const r = await Cascade.generate(prompt);
+    if (r && r.text) {
+      const out = extractJSON(r.text);
+      if (out) { out._tier = r.tier + '·text'; return out; }
+    }
+  } catch (e) {}
+  return t0;
+};
+
+async function parseAndFill() {
   const raw = document.getElementById('rcRaw').value;
   if (!raw) { toast('Type something first'); return; }
-  const out = parseReceiptText(raw);
-  document.getElementById('rcVendor').value = out.vendor;
-  document.getElementById('rcAmount').value = out.amount;
-  if (out.date) document.getElementById('rcDate').value = out.date;
-  document.getElementById('rcCategory').value = out.category;
-  toast('Filled in');
+  toast('Reading...');
+  const out = await Cascade.parseReceiptText(raw);
+  if (out.vendor)   document.getElementById('rcVendor').value = out.vendor;
+  if (out.amount)   document.getElementById('rcAmount').value = out.amount;
+  if (out.date)     document.getElementById('rcDate').value = out.date;
+  if (out.category) document.getElementById('rcCategory').value = out.category;
+  if (out.notes && !document.getElementById('rcNotes').value) document.getElementById('rcNotes').value = out.notes;
+  toast('◊ Filled in · via ' + (out._tier || 'T0'));
+  KCC.log('R1', 'text_parse', 1);
 }
 
 async function saveReceipt() {
