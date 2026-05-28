@@ -151,6 +151,33 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
 
 <!-- ═══ DASHBOARD ═══ -->
 <section class="view active" id="view-dash">
+
+  <!-- ASK THE BOOKS · estate-powered NL search -->
+  <div class="card" style="background:linear-gradient(135deg,rgba(232,160,18,0.08),rgba(232,160,18,0.02));border-color:rgba(232,160,18,0.3)">
+    <div class="card-hd">
+      <h3 style="color:var(--gold);margin:0">Ask the books</h3>
+      <span class="muted" style="font-size:11px" id="askTier">offline</span>
+    </div>
+    <div class="field" style="margin-bottom:8px">
+      <input id="askInput" placeholder='e.g. "how much did I spend at Screwfix this month" · "anyone overdue paying me"' style="font-size:15px">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn small" onclick="ask()" style="flex:1;min-width:120px">Ask</button>
+      <button class="btn small secondary" onclick="askPreset('how much tax am I going to owe')">Tax projection</button>
+      <button class="btn small secondary" onclick="askPreset('anyone overdue paying me')">Overdue</button>
+      <button class="btn small secondary" onclick="askPreset('compare this quarter to last')">Compare</button>
+    </div>
+    <div id="askOut" style="display:none;margin-top:12px;padding:12px;background:var(--bg);border-radius:8px;font-size:14px;line-height:1.6"></div>
+  </div>
+
+  <!-- SMART INSIGHTS · auto-detected -->
+  <div class="card" id="insightsCard" style="display:none">
+    <div class="card-hd">
+      <h3>Heads up · auto-detected</h3>
+    </div>
+    <div id="insightsBody"></div>
+  </div>
+
   <div class="card">
     <div class="grid-2">
       <div class="stat">
@@ -1281,9 +1308,13 @@ function showSettings() {
     </div>
     <div class="field"><label>Sub-line</label><input id="stSub" value="${escHTML(state.settings.brand.sub)}"></div>
 
-    <h3 style="margin-top:24px">AI receipt scanning (optional)</h3>
-    <p class="muted" style="font-size:13px;margin-bottom:8px">Paste a free Gemini API key to get smart photo-of-receipt scanning. <a style="color:var(--gold)" href="https://aistudio.google.com/apikey" target="_blank">Get one here</a>. Stays on your phone.</p>
-    <div class="field"><label>Gemini API key</label><input id="stGemini" type="password" value="${escHTML(state.settings.geminiKey)}" placeholder="paste key here"></div>
+    <h3 style="margin-top:24px">AI keys (all optional · use any one)</h3>
+    <p class="muted" style="font-size:13px;margin-bottom:8px">Unlocks smart receipt scanning + conversational "ask the books" answers. Pick whichever you have. <a style="color:var(--gold)" href="https://aistudio.google.com/apikey" target="_blank">Gemini is free</a>. Keys stay on your phone.</p>
+    <div class="field"><label>Gemini key <span class="muted">· free tier available</span></label><input id="stGemini" type="password" value="${escHTML(state.settings.geminiKey)}" placeholder="paste · optional"></div>
+    <div class="field"><label>Anthropic key <span class="muted">· Claude</span></label><input id="stAnthropic" type="password" value="${escHTML(state.settings.anthropicKey || '')}" placeholder="paste · optional"></div>
+    <div class="field"><label>OpenAI key <span class="muted">· GPT</span></label><input id="stOpenAI" type="password" value="${escHTML(state.settings.openaiKey || '')}" placeholder="paste · optional"></div>
+    <div class="field"><label>OpenRouter key <span class="muted">· any model</span></label><input id="stOpenRouter" type="password" value="${escHTML(state.settings.openrouterKey || '')}" placeholder="paste · optional"></div>
+    <p class="muted" style="font-size:11px;margin-top:-4px">Tier priority: Anthropic → OpenAI → Gemini → OpenRouter → Local (Ollama on :11434 if running) → built-in rules.</p>
 
     <h3 style="margin-top:24px">Backup</h3>
     <div class="btn-row">
@@ -1307,6 +1338,10 @@ async function saveAllSettings() {
   state.settings.brand.mark = (document.getElementById('stMark').value || 'F').slice(0, 2);
   state.settings.brand.sub = document.getElementById('stSub').value || 'sole trader · UK';
   state.settings.geminiKey = document.getElementById('stGemini').value;
+  state.settings.anthropicKey = document.getElementById('stAnthropic')?.value || '';
+  state.settings.openaiKey = document.getElementById('stOpenAI')?.value || '';
+  state.settings.openrouterKey = document.getElementById('stOpenRouter')?.value || '';
+  Cascade._localProbed = undefined;  // force re-probe with new keys
   await saveState();
   applyBrand();
   closeModal();
@@ -1358,6 +1393,365 @@ async function resetAll() {
   toast('Reset');
   renderDash();
 }
+
+// ═══════════════════════════════════════════
+// ESTATE POWER · cascade · bloom · mesh · KCC
+// hidden behind the simple "ask the books" bar
+// the user sees one input · we route through:
+//   T0 built-in domain rules (always available)
+//   T1 WebLLM in-browser (if loaded)
+//   T2 FallCore local proxy (if reachable on localhost)
+//   T3 multi-provider API (Gemini, Claude, OpenAI, OpenRouter)
+// ═══════════════════════════════════════════
+
+// ═══ BLOOM · text → 7-ring vector ═══
+// ported from teslasolar/MissCassandra · canonical fall-bloom
+const BLOOM_PRIMES = [2, 3, 5, 7, 11, 13, 17];
+const BLOOM_BANDS = [
+  /\b(ground|raw|input|domain|business|trade|sole|trader)\b/g,        // R0
+  /\b(parse|detect|find|search|extract|how much|when|who|what)\b/g,   // R1
+  /\b(check|verify|gate|rule|exclude|allowable|valid|threshold)\b/g,  // R2
+  /\b(brand|feel|trust|client|customer|reputation|relationship)\b/g,  // R3
+  /\b(invoice|email|send|publish|report|tell|show|generate)\b/g,      // R4
+  /\b(compare|vs|against|mirror|reflect|review|audit)\b/g,            // R5
+  /\b(watch|track|log|history|past|trend|projection|forecast)\b/g,    // R6
+];
+function bloom(text) {
+  const t = String(text || '').toLowerCase();
+  const counts = BLOOM_BANDS.map(re => (t.match(re) || []).length);
+  const maxC = Math.max(1, ...counts);
+  const vec = counts.map(c => Math.max(0, Math.min(5, Math.round((c / maxC) * 5))));
+  const dom = vec.indexOf(Math.max(...vec));
+  return { vec, dominantRing: dom, sum: vec.reduce((a, b) => a + b, 0) };
+}
+
+// ═══ CASCADE · T0 → T3 ═══
+const Cascade = {
+  // probe what's available right now
+  async detectTier() {
+    if (window.webllm && window.webllm.ready) return 'T1';
+    if (await Cascade._probeLocal()) return 'T2';
+    const s = state.settings;
+    if (s.geminiKey || s.openaiKey || s.anthropicKey || s.openrouterKey) return 'T3';
+    return 'T0';
+  },
+  async _probeLocal() {
+    if (Cascade._localProbed !== undefined) return Cascade._localProbed;
+    try {
+      const r = await Promise.race([
+        fetch('http://127.0.0.1:11434/api/tags').then(r => r.ok),
+        new Promise(res => setTimeout(() => res(false), 400)),
+      ]);
+      Cascade._localProbed = !!r;
+    } catch (e) { Cascade._localProbed = false; }
+    return Cascade._localProbed;
+  },
+
+  // call available provider · prompt in, text out · falls through tiers
+  async generate(prompt, opts = {}) {
+    const tier = await Cascade.detectTier();
+    try {
+      if (tier === 'T3') return { tier, text: await Cascade._callApi(prompt, opts) };
+      if (tier === 'T2') return { tier, text: await Cascade._callLocal(prompt, opts) };
+      if (tier === 'T1') return { tier, text: await Cascade._callWebLLM(prompt, opts) };
+    } catch (e) { /* fall through to T0 */ }
+    return { tier: 'T0', text: null };
+  },
+
+  async _callApi(prompt, opts) {
+    const s = state.settings;
+    // try in priority: anthropic > openai > gemini > openrouter
+    if (s.anthropicKey) {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': s.anthropicKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 800, messages: [{ role: 'user', content: prompt }] })
+      });
+      const d = await r.json();
+      return d?.content?.[0]?.text || '';
+    }
+    if (s.openaiKey) {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.openaiKey },
+        body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: prompt }] })
+      });
+      const d = await r.json();
+      return d?.choices?.[0]?.message?.content || '';
+    }
+    if (s.geminiKey) {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${s.geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+      const d = await r.json();
+      return d?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    }
+    if (s.openrouterKey) {
+      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.openrouterKey, 'HTTP-Referer': location.origin },
+        body: JSON.stringify({ model: 'meta-llama/llama-3.3-70b-instruct', messages: [{ role: 'user', content: prompt }] })
+      });
+      const d = await r.json();
+      return d?.choices?.[0]?.message?.content || '';
+    }
+    return null;
+  },
+
+  async _callLocal(prompt, opts) {
+    // FallCore proxy or Ollama on localhost:11434
+    const r = await fetch('http://127.0.0.1:11434/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'llama3.2', prompt, stream: false })
+    });
+    const d = await r.json();
+    return d?.response || '';
+  },
+
+  async _callWebLLM(prompt, opts) {
+    if (!window.webllm || !window.webllm.chat) return null;
+    return await window.webllm.chat.completions.create({
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 800,
+    }).then(r => r.choices?.[0]?.message?.content || '');
+  },
+};
+
+// ═══ KCC · contribution ledger · silent ═══
+const KCC = {
+  log(ring, action, weight = 1) {
+    if (!state.kcc) state.kcc = [];
+    state.kcc.push({ ts: Date.now(), ring, action, weight });
+    if (state.kcc.length > 500) state.kcc = state.kcc.slice(-500);
+    saveState();
+    try { FALL_CHANNELS.signal.postMessage({ source: 'fallaccount-trades', type: 'kcc', ring, action, weight, ts: Date.now() }); } catch (e) {}
+  },
+  totals() {
+    const s = { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0 };
+    (state.kcc || []).forEach(e => { if (s[e.ring] !== undefined) s[e.ring] += e.weight; });
+    return s;
+  },
+};
+
+// ═══ ASK THE BOOKS · NL query router ═══
+// T0 always works · upgrades transparently if T1+ available
+async function ask(q) {
+  q = q || document.getElementById('askInput').value.trim();
+  if (!q) return;
+  KCC.log('R1', 'ask', 1);
+  const outBox = document.getElementById('askOut');
+  outBox.style.display = 'block';
+  outBox.innerHTML = '<span class="muted">thinking...</span>';
+
+  // T0: built-in domain handlers (always work, instant, offline)
+  const handler = routeQuery(q);
+  if (handler) {
+    const result = handler();
+    outBox.innerHTML = result;
+    document.getElementById('askTier').textContent = 'T0 · instant';
+    return;
+  }
+
+  // T1+: cascade to LLM for things T0 doesn't recognise
+  const tier = await Cascade.detectTier();
+  document.getElementById('askTier').textContent = tier === 'T0' ? 'offline · add a key in settings for smarter answers' : tier;
+  if (tier === 'T0') {
+    outBox.innerHTML = `<div class="muted">I didn't recognise that question. Try one of:</div>
+      <ul style="margin-top:8px;padding-left:20px;color:var(--text)">
+        <li>"how much did I spend at Screwfix this month"</li>
+        <li>"anyone overdue paying me"</li>
+        <li>"how much tax am I going to owe"</li>
+        <li>"compare this quarter to last"</li>
+        <li>"what's my biggest expense category"</li>
+        <li>"any jobs I forgot to invoice"</li>
+      </ul>
+      <div class="muted" style="margin-top:8px;font-size:12px">To get conversational AI answers, add a free Gemini key in Settings.</div>`;
+    return;
+  }
+
+  // Build context for LLM from current data
+  const t = calcTax();
+  const context = `You are an accountant for a UK sole trader (builder/plumber/sparky). Answer based on this live data. Keep answers SHORT (2-4 sentences max), no jargon, money in £, dates in UK format. The user is using a phone.
+
+LIVE DATA:
+- Income this tax year: £${t.income.toFixed(2)}
+- Expenses this tax year: £${t.expenses.toFixed(2)}
+- Mileage allowance: £${t.mileageAllow.toFixed(2)} (${t.mileageTotal} miles)
+- Taxable profit: £${t.profit.toFixed(2)}
+- Estimated tax to set aside: £${t.total.toFixed(2)}
+- Receipts logged: ${state.receipts.length}
+- Jobs: ${state.jobs.length} (${state.jobs.filter(j => j.status === 'paid').length} paid)
+- Invoices: ${state.invoices.length} (${state.invoices.filter(i => i.paid).length} paid, ${state.invoices.filter(i => i.sent && !i.paid).length} sent-unpaid)
+- CIS deductions taken: £${t.cisTaken.toFixed(2)}
+
+Recent receipts (last 10): ${state.receipts.slice(-10).map(r => `${r.date} ${r.vendor} £${r.amount} (${r.category})`).join('; ')}
+
+USER QUESTION: ${q}
+
+Answer:`;
+  try {
+    const result = await Cascade.generate(context);
+    if (result && result.text) {
+      outBox.innerHTML = escHTML(result.text).replace(/\n/g, '<br>') + `<div class="muted" style="margin-top:8px;font-size:11px">via ${result.tier}</div>`;
+      KCC.log('R4', 'answer', 1);
+    } else {
+      outBox.innerHTML = '<span class="muted">No response · check Settings for API key.</span>';
+    }
+  } catch (e) {
+    outBox.innerHTML = '<span class="muted">Network issue · try again.</span>';
+  }
+}
+
+function askPreset(q) {
+  document.getElementById('askInput').value = q;
+  ask(q);
+}
+
+// ═══ T0 QUERY ROUTER · built-in handlers · always works offline ═══
+function routeQuery(q) {
+  const ql = q.toLowerCase();
+  // Spend at vendor
+  if (/spent? at|spending at|how much.*at/.test(ql)) {
+    const vendorMatch = q.match(/at\s+([A-Z][a-zA-Z& ]+|screwfix|toolstation|travis perkins|jewson|wickes|b&q|selco)/i);
+    if (vendorMatch) {
+      const vendor = vendorMatch[1].toLowerCase();
+      const period = /this month/.test(ql) ? 'month' : (/this year|ytd/.test(ql) ? 'year' : 'all');
+      return () => spendAt(vendor, period);
+    }
+  }
+  // Overdue
+  if (/overdue|owed|chase|unpaid/.test(ql)) return () => overdueReport();
+  // Tax owed
+  if (/(tax|hmrc).*(owe|owing|going to|need|set aside)|how much.*tax/.test(ql)) return () => taxAnswer();
+  // Compare quarter
+  if (/compare.*quarter|last quarter|previous quarter/.test(ql)) return () => quarterCompare();
+  // Biggest expense
+  if (/biggest|largest|top.*(expense|cost|category)/.test(ql)) return () => topCategory();
+  // Forgot to invoice
+  if (/forgot.*invoice|done but.*invoice|outstanding job/.test(ql)) return () => forgotInvoice();
+  // Profit / income
+  if (/profit|earnings|income/.test(ql) && /this (month|year)/.test(ql)) return () => profitSummary();
+  return null;
+}
+
+function spendAt(vendor, period) {
+  const now = new Date();
+  const cutoff = period === 'month' ? new Date(now.getFullYear(), now.getMonth(), 1) : (period === 'year' ? new Date(now.getFullYear(), 3, 6) : new Date(0));
+  const matches = state.receipts.filter(r => r.vendor.toLowerCase().includes(vendor) && new Date(r.date) >= cutoff);
+  const total = matches.reduce((s, r) => s + r.amount, 0);
+  return `<b>${money(total)}</b> at vendors matching "${escHTML(vendor)}" ${period === 'month' ? 'this month' : period === 'year' ? 'this tax year' : 'all time'}.<br><span class="muted">${matches.length} receipt${matches.length === 1 ? '' : 's'}.</span>`;
+}
+
+function overdueReport() {
+  const now = Date.now();
+  const overdue = state.invoices.filter(i => i.sent && !i.paid && (now - new Date(i.date).getTime()) > 30 * 86400000);
+  if (!overdue.length) return `<b class="green">All paid up.</b> No invoices sitting unpaid past 30 days.`;
+  const total = overdue.reduce((s, i) => s + i.amount, 0);
+  return `<b class="red">${money(total)} overdue</b> across ${overdue.length} invoice${overdue.length === 1 ? '' : 's'}:<br>${overdue.map(i => `· ${escHTML(i.customer || 'unknown')} · ${money(i.amount)} · ${fmtDate(i.date)}`).join('<br>')}`;
+}
+
+function taxAnswer() {
+  const t = calcTax();
+  return `<b>${money(t.total)}</b> to set aside for HMRC at year-end (Jan 31).<br>That's <b>${money(t.monthly)}/month</b> from now till the deadline.<br><span class="muted">Income £${moneyShort(t.income)} − Expenses £${moneyShort(t.expenses + t.mileageAllow)} = Profit £${moneyShort(t.profit)}. Income tax ${money(t.it)} + NI ${money(t.ni)} − CIS credit ${money(t.cisTaken)}.</span>`;
+}
+
+function quarterCompare() {
+  const now = new Date();
+  const m = now.getMonth();
+  const thisQ = m < 3 ? 'Q4' : m < 6 ? 'Q1' : m < 9 ? 'Q2' : 'Q3';
+  const lastQ = thisQ === 'Q1' ? 'Q4' : thisQ === 'Q2' ? 'Q1' : thisQ === 'Q3' ? 'Q2' : 'Q3';
+  const thisData = quarterData(thisQ);
+  const lastData = quarterData(lastQ);
+  const delta = thisData.profit - lastData.profit;
+  const arrow = delta >= 0 ? '↑' : '↓';
+  const cls = delta >= 0 ? 'green' : 'red';
+  return `<b>${thisQ}</b> profit: ${money(thisData.profit)} · <b>${lastQ}</b>: ${money(lastData.profit)}<br><span class="${cls}">${arrow} ${money(Math.abs(delta))}</span> · income ${money(thisData.income)} (vs ${money(lastData.income)}) · expenses ${money(thisData.expenses)} (vs ${money(lastData.expenses)})`;
+}
+
+function quarterData(q) {
+  const income = state.income.filter(i => inQuarter(i.date, q)).reduce((s, i) => s + i.amount, 0)
+               + state.invoices.filter(i => i.paid && inQuarter(i.paidDate || i.date, q)).reduce((s, i) => s + i.amount, 0);
+  const expenses = state.receipts.filter(r => inQuarter(r.date, q)).reduce((s, r) => s + r.amount, 0);
+  return { income, expenses, profit: income - expenses };
+}
+
+function topCategory() {
+  const byCat = {};
+  state.receipts.forEach(r => { byCat[r.category] = (byCat[r.category] || 0) + r.amount; });
+  const sorted = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  if (!sorted.length) return `<span class="muted">No expenses logged yet.</span>`;
+  return `Top expense categories:<br>${sorted.slice(0, 5).map(([c, v], i) => `${i + 1}. <b>${c}</b> · ${money(v)}`).join('<br>')}`;
+}
+
+function forgotInvoice() {
+  const todo = state.jobs.filter(j => j.status === 'done' || j.status === 'started');
+  if (!todo.length) return `<b class="green">All clean.</b> No jobs sitting un-invoiced.`;
+  return `<b class="red">${todo.length} job${todo.length === 1 ? '' : 's'}</b> to invoice:<br>${todo.map(j => `· ${escHTML(j.title)} · ${escHTML(j.customer || '')} · quoted ${money(j.quote || 0)}`).join('<br>')}`;
+}
+
+function profitSummary() {
+  const t = calcTax();
+  return `Profit this tax year: <b>${money(t.profit)}</b><br>Income ${money(t.income)} − Expenses ${money(t.expenses + t.mileageAllow)}.`;
+}
+
+// ═══ SMART INSIGHTS · auto-detected · runs on dashboard render ═══
+function buildInsights() {
+  const insights = [];
+  const now = Date.now();
+  // forgot-to-invoice
+  const todo = state.jobs.filter(j => j.status === 'done');
+  if (todo.length) insights.push({ severity: 'warn', msg: `<b>${todo.length} job${todo.length === 1 ? '' : 's'}</b> marked done but not yet invoiced. <a onclick="switchView(\'jobs\')" style="color:var(--gold);cursor:pointer">Open jobs →</a>` });
+  // overdue
+  const overdue = state.invoices.filter(i => i.sent && !i.paid && (now - new Date(i.date).getTime()) > 30 * 86400000);
+  if (overdue.length) {
+    const total = overdue.reduce((s, i) => s + i.amount, 0);
+    insights.push({ severity: 'warn', msg: `<b>${money(total)}</b> overdue across ${overdue.length} invoice${overdue.length === 1 ? '' : 's'}. <a onclick="switchView(\'invoices\')" style="color:var(--gold);cursor:pointer">Chase →</a>` });
+  }
+  // tax threshold warnings
+  const t = calcTax();
+  if (t.profit > 45000 && t.profit < 50270) insights.push({ severity: 'warn', msg: `You're <b>${money(50270 - t.profit)}</b> from the 40% tax bracket. After that, every extra pound is taxed at 40%.` });
+  if (t.income > 76500 && state.settings.vat === 'none') insights.push({ severity: 'warn', msg: `Income approaching VAT threshold (£90k). <b>${money(90000 - t.income)}</b> headroom left. <a onclick="switchView(\'tax\')" style="color:var(--gold);cursor:pointer">Settings →</a>` });
+  // missing-job-link receipts (top 5 by amount with no job)
+  const orphan = state.receipts.filter(r => !r.jobId && r.amount > 50);
+  if (orphan.length > 5) insights.push({ severity: 'info', msg: `<b>${orphan.length} receipts</b> over £50 not linked to any job — link them to improve per-job profit tracking.` });
+
+  const card = document.getElementById('insightsCard');
+  const body = document.getElementById('insightsBody');
+  if (!insights.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  body.innerHTML = insights.map(i => `<div class="${i.severity === 'warn' ? 'warn' : 'good'}">${i.msg}</div>`).join('');
+}
+
+// ═══ POST-MESSAGE API · let other Fall* tools query us ═══
+window.addEventListener('message', async (e) => {
+  const m = e.data;
+  if (!m || m.target !== 'fallaccount-trades' || !m.action) return;
+  let resp = null;
+  try {
+    if (m.action === 'tax_snapshot') resp = calcTax();
+    else if (m.action === 'ping') resp = { ok: true, source: 'fallaccount-trades', prime: PRIME, version: VERSION };
+    else if (m.action === 'ask') resp = await Cascade.generate(m.prompt || '');
+    else if (m.action === 'kcc_totals') resp = KCC.totals();
+  } catch (err) { resp = { error: err.message }; }
+  e.source?.postMessage({ target: m.source || '*', responseTo: m.action, data: resp }, '*');
+});
+
+// hook into existing render dash to also render insights
+const _origRenderDash = renderDash;
+renderDash = function() {
+  _origRenderDash();
+  buildInsights();
+};
+
+// initial tier badge on boot
+(async () => {
+  const tier = await Cascade.detectTier();
+  const el = document.getElementById('askTier');
+  if (el) el.textContent = tier === 'T0' ? 'offline · all basic Q&A works' : tier;
+})();
 
 // ═══ KONOMI LICENCE SHIM ═══
 // Ed25519 dead-mode envelope · 30-day trial · single-licence-per-device
