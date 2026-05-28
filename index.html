@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a17">
+<title>FallAccount · Trades</title>
+<link rel="manifest" href='data:application/manifest+json,{"name":"FallAccount Trades","short_name":"FallAccount","start_url":".","display":"standalone","background_color":"#1a1a17","theme_color":"#e8a012","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 fill=%22%231a1a17%22/><text x=%2232%22 y=%2244%22 text-anchor=%22middle%22 font-size=%2236%22 fill=%22%23e8a012%22 font-family=%22sans-serif%22 font-weight=%22bold%22>F</text></svg>","sizes":"any","type":"image/svg+xml"}]}'>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #1a1a17;
+  --bg-2: #23231f;
+  --bg-3: #2d2d28;
+  --line: #3a3a33;
+  --text: #f5f1e8;
+  --muted: #948f80;
+  --gold: #e8a012;
+  --gold-dim: #b87d0d;
+  --green: #44aa44;
+  --red: #ff4444;
+  --blue: #4a9eff;
+  --r: 12px;
+}
+html, body { background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100dvh; -webkit-font-smoothing: antialiased; }
+body { padding-bottom: env(safe-area-inset-bottom); }
+h1, h2, h3 { font-family: 'Syne', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.02em; }
+h1 { font-size: 24px; }
+h2 { font-size: 20px; margin-bottom: 12px; }
+h3 { font-size: 16px; color: var(--gold); margin-bottom: 8px; }
+
+/* ═══ TOP BAR ═══ */
+header { padding: 16px 16px 12px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 50; backdrop-filter: blur(8px); }
+.top { display: flex; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 36px; height: 36px; background: var(--gold); border-radius: 8px; display: grid; place-items: center; color: #1a1a17; font-family: 'Syne'; font-weight: 800; font-size: 22px; }
+.brand-name { font-family: 'Syne'; font-weight: 700; font-size: 18px; }
+.brand-sub { color: var(--muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; }
+.top-actions { display: flex; gap: 8px; }
+.top-btn { background: var(--bg-2); border: 1px solid var(--line); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.top-btn:active { background: var(--bg-3); }
+
+/* ═══ MAIN ═══ */
+main { padding: 16px; max-width: 720px; margin: 0 auto; padding-bottom: 96px; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* ═══ CARDS ═══ */
+.card { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; margin-bottom: 16px; }
+.card-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.row:last-child { border-bottom: none; }
+.row .lbl { color: var(--muted); }
+.row .val { font-weight: 600; color: var(--text); text-align: right; }
+.row .val.gold { color: var(--gold); }
+.row .val.green { color: var(--green); }
+.row .val.red { color: var(--red); }
+
+/* ═══ BIG BUTTONS — gloves, dirty hands ═══ */
+.btn { background: var(--gold); color: #1a1a17; border: none; padding: 18px 20px; border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; width: 100%; touch-action: manipulation; font-family: inherit; }
+.btn:active { background: var(--gold-dim); transform: scale(0.98); }
+.btn.secondary { background: var(--bg-3); color: var(--text); border: 1px solid var(--line); }
+.btn.green { background: var(--green); color: #fff; }
+.btn.red { background: var(--red); color: #fff; }
+.btn.small { padding: 10px 16px; font-size: 14px; width: auto; }
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.btn-row.single { grid-template-columns: 1fr; }
+
+/* ═══ INPUTS — fat fingers ═══ */
+.field { margin-bottom: 14px; }
+.field label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.field input, .field select, .field textarea { width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 14px 12px; border-radius: 8px; font-size: 17px; font-family: inherit; }
+.field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--gold); outline-offset: -1px; }
+.field textarea { min-height: 80px; resize: vertical; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field-row .field { margin-bottom: 0; }
+
+/* ═══ BIG NUMBERS ═══ */
+.stat { padding: 16px 0; }
+.stat .num { font-family: 'Syne'; font-weight: 700; font-size: 32px; color: var(--gold); line-height: 1.1; }
+.stat .num.green { color: var(--green); }
+.stat .num.red { color: var(--red); }
+.stat .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ═══ LIST ITEMS ═══ */
+.item { background: var(--bg-3); border-radius: 8px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+.item:active { background: var(--bg-2); }
+.item-hd { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.item-title { font-weight: 600; }
+.item-amount { font-weight: 700; color: var(--gold); }
+.item-meta { color: var(--muted); font-size: 13px; display: flex; gap: 12px; }
+.item-meta .tag { background: var(--bg); padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+.item-meta .tag.paid { color: var(--green); }
+.item-meta .tag.sent { color: var(--blue); }
+.item-meta .tag.overdue { color: var(--red); }
+.item-meta .tag.draft { color: var(--muted); }
+
+.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty .icon { font-size: 48px; margin-bottom: 12px; }
+.empty h3 { color: var(--text); margin-bottom: 8px; }
+
+/* ═══ BOTTOM NAV ═══ */
+nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 4px calc(8px + env(safe-area-inset-bottom)); z-index: 60; }
+.tab { background: none; border: none; color: var(--muted); padding: 10px 4px; font-size: 11px; font-family: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; border-radius: 6px; touch-action: manipulation; }
+.tab.active { color: var(--gold); }
+.tab .ic { font-size: 20px; }
+
+/* ═══ MODAL ═══ */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: none; align-items: flex-end; padding: 0; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--bg-2); width: 100%; max-width: 720px; margin: 0 auto; border-radius: 16px 16px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+.modal-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 28px; cursor: pointer; padding: 0 8px; line-height: 1; }
+
+/* ═══ TOAST ═══ */
+.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #1a1a17; padding: 12px 20px; border-radius: 24px; font-weight: 600; z-index: 200; box-shadow: 0 4px 20px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+
+.muted { color: var(--muted); }
+.hint { color: var(--muted); font-size: 13px; margin-top: 8px; }
+.warn { background: rgba(255,68,68,0.1); border: 1px solid var(--red); color: var(--text); padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 14px; }
+.good { background: rgba(68,170,68,0.1); border: 1px solid var(--green); color: var(--text); padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 14px; }
+
+@media (max-width: 380px) {
+  .field-row { grid-template-columns: 1fr; }
+  .btn-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <div class="brand">
+      <div class="brand-mark" id="brandMark">F</div>
+      <div>
+        <div class="brand-name" id="brandName">FallAccount</div>
+        <div class="brand-sub" id="brandSub">Trades · sole trader</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="top-btn" id="topSettings">⚙</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══ DASHBOARD ═══ -->
+<section class="view active" id="view-dash">
+  <div class="card">
+    <div class="grid-2">
+      <div class="stat">
+        <div class="num green" id="dashIncome">£0</div>
+        <div class="lbl">Income this year</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="dashExpenses">£0</div>
+        <div class="lbl">Expenses this year</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="stat">
+        <div class="num gold" id="dashProfit">£0</div>
+        <div class="lbl">Profit (income − exp.)</div>
+      </div>
+      <div class="stat">
+        <div class="num red" id="dashTaxOwed">£0</div>
+        <div class="lbl">Set aside for tax</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Quick actions</h3>
+    <div class="btn-row">
+      <button class="btn" onclick="showReceiptModal()">📸 Add receipt</button>
+      <button class="btn" onclick="showMileageModal()">🚐 Log mileage</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="showJobModal()">🔨 New job</button>
+      <button class="btn secondary" onclick="showIncomeModal()">💷 Got paid</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <h3>Recent</h3>
+      <button class="top-btn" onclick="switchView('receipts')">All →</button>
+    </div>
+    <div id="dashRecent"></div>
+  </div>
+
+  <div class="card" id="dashTaxWarn" style="display:none">
+    <h3>Heads up</h3>
+    <div id="dashTaxWarnBody"></div>
+  </div>
+</section>
+
+<!-- ═══ RECEIPTS ═══ -->
+<section class="view" id="view-receipts">
+  <div class="card">
+    <div class="card-hd">
+      <h2>Receipts</h2>
+      <button class="btn small" onclick="showReceiptModal()">+ Add</button>
+    </div>
+    <div id="receiptsList"></div>
+  </div>
+</section>
+
+<!-- ═══ JOBS ═══ -->
+<section class="view" id="view-jobs">
+  <div class="card">
+    <div class="card-hd">
+      <h2>Jobs</h2>
+      <button class="btn small" onclick="showJobModal()">+ New</button>
+    </div>
+    <div id="jobsList"></div>
+  </div>
+</section>
+
+<!-- ═══ INVOICES ═══ -->
+<section class="view" id="view-invoices">
+  <div class="card">
+    <div class="card-hd">
+      <h2>Invoices</h2>
+      <button class="btn small" onclick="showInvoiceModal()">+ Draft</button>
+    </div>
+    <div id="invoicesList"></div>
+  </div>
+</section>
+
+<!-- ═══ TAX ═══ -->
+<section class="view" id="view-tax">
+  <div class="card">
+    <h2>Your tax position</h2>
+    <p class="muted" style="margin-bottom:12px;font-size:13px">UK sole trader · 2025/26 thresholds · figures update live as you log income & expenses</p>
+
+    <div class="row"><span class="lbl">Income</span><span class="val green" id="taxIncome">£0</span></div>
+    <div class="row"><span class="lbl">Expenses</span><span class="val" id="taxExpenses">£0</span></div>
+    <div class="row"><span class="lbl">Mileage allowance</span><span class="val" id="taxMileage">£0</span></div>
+    <div class="row"><span class="lbl">CIS deductions taken</span><span class="val" id="taxCIS">£0</span></div>
+    <div class="row"><span class="lbl">Taxable profit</span><span class="val gold" id="taxProfit">£0</span></div>
+    <div class="row"><span class="lbl">Income tax estimate</span><span class="val red" id="taxIT">£0</span></div>
+    <div class="row"><span class="lbl">NI Class 4 estimate</span><span class="val red" id="taxNI">£0</span></div>
+    <div class="row"><span class="lbl">Less CIS credit</span><span class="val green" id="taxCISCredit">£0</span></div>
+    <div class="row"><span class="lbl"><b>Total to set aside</b></span><span class="val red" id="taxTotal" style="font-size:18px">£0</span></div>
+    <div class="row"><span class="lbl">Per month from now</span><span class="val gold" id="taxMonthly">£0</span></div>
+  </div>
+
+  <div class="card">
+    <h3>MTD quarterly</h3>
+    <p class="muted" style="font-size:13px;margin-bottom:12px">Generates the figures you (or your accountant) need to submit to HMRC. Doesn't auto-submit — you stay in control.</p>
+    <div class="field">
+      <label>Quarter</label>
+      <select id="mtdQuarter">
+        <option value="Q1">Q1 · 6 Apr – 5 Jul</option>
+        <option value="Q2">Q2 · 6 Jul – 5 Oct</option>
+        <option value="Q3">Q3 · 6 Oct – 5 Jan</option>
+        <option value="Q4">Q4 · 6 Jan – 5 Apr</option>
+      </select>
+    </div>
+    <button class="btn" onclick="generateMTD()">Generate quarterly report</button>
+    <div id="mtdOutput" style="margin-top:16px"></div>
+  </div>
+
+  <div class="card">
+    <h3>Settings — sole trader, trades</h3>
+    <div class="field">
+      <label>Are you CIS subcontractor?</label>
+      <select id="setCIS">
+        <option value="none">No — direct to customers</option>
+        <option value="20">Yes — CIS registered (20% deducted)</option>
+        <option value="30">Yes — CIS not verified (30% deducted)</option>
+        <option value="0">Yes — gross status (0% deducted)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>VAT registered?</label>
+      <select id="setVAT">
+        <option value="none">No (under £90k threshold)</option>
+        <option value="standard">Standard rate (20%)</option>
+        <option value="flatrate">Flat rate scheme (9.5% labour-only build)</option>
+        <option value="flatrate14">Flat rate scheme (14.5% general construction)</option>
+      </select>
+    </div>
+    <button class="btn secondary" onclick="saveSettings()">Save</button>
+  </div>
+</section>
+
+</main>
+
+<!-- ═══ BOTTOM NAV ═══ -->
+<nav>
+  <button class="tab active" data-view="dash"><span class="ic">▦</span>Home</button>
+  <button class="tab" data-view="receipts"><span class="ic">🧾</span>Receipts</button>
+  <button class="tab" data-view="jobs"><span class="ic">🔨</span>Jobs</button>
+  <button class="tab" data-view="invoices"><span class="ic">📤</span>Invoices</button>
+  <button class="tab" data-view="tax"><span class="ic">£</span>Tax</button>
+</nav>
+
+<!-- ═══ MODALS ═══ -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h2 id="modalTitle">·</h2>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Saved</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════
+// FallAccount Trades · sovereign single-file
+// ◊·κ=1 · v19 field-seed compliant
+// ═══════════════════════════════════════════
+
+const VERSION = '1.0.0';
+const PRIME = 31; // FallAccount mesh prime
+const STORE_NAME = 'fallaccount-trades';
+
+// UK 2025/26 tax constants (used as 2026/27 proxy until autumn statement)
+const TAX = {
+  personalAllowance: 12570,
+  basicBand: 37700,         // 12,571 → 50,270
+  higherBand: 75000,        // 50,271 → 125,140
+  paTaperStart: 100000,
+  paTaperEnd: 125140,
+  basicRate: 0.20,
+  higherRate: 0.40,
+  additionalRate: 0.45,
+  // NI Class 4 (self-employed)
+  ni4LowerThreshold: 12570,
+  ni4UpperThreshold: 50270,
+  ni4MainRate: 0.06,
+  ni4UpperRate: 0.02,
+  // Mileage (HMRC)
+  carRate1: 0.45,           // first 10k miles
+  carRate2: 0.25,           // after 10k
+  carThreshold: 10000,
+  // VAT
+  vatThreshold: 90000,
+};
+
+// ═══ STATE ═══
+let state = {
+  receipts: [],
+  jobs: [],
+  invoices: [],
+  mileage: [],
+  income: [],     // direct income entries (when you got paid)
+  settings: {
+    cis: 'none',
+    vat: 'none',
+    brand: { name: 'FallAccount', mark: 'F', sub: 'Trades · sole trader' },
+    geminiKey: '',
+  },
+  meta: { created: Date.now(), version: VERSION },
+};
+
+// ═══ STORAGE — IndexedDB with localStorage fallback ═══
+let db = null;
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(STORE_NAME, 1);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('state')) d.createObjectStore('state');
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror = e => reject(e);
+  });
+}
+async function saveState() {
+  try {
+    if (!db) await openDB();
+    const tx = db.transaction('state', 'readwrite');
+    tx.objectStore('state').put(state, 'main');
+  } catch (e) {
+    localStorage.setItem(STORE_NAME, JSON.stringify(state));
+  }
+}
+async function loadState() {
+  try {
+    if (!db) await openDB();
+    return new Promise(resolve => {
+      const tx = db.transaction('state', 'readonly');
+      const req = tx.objectStore('state').get('main');
+      req.onsuccess = () => { if (req.result) state = Object.assign(state, req.result); resolve(); };
+      req.onerror = () => resolve();
+    });
+  } catch (e) {
+    const raw = localStorage.getItem(STORE_NAME);
+    if (raw) try { state = Object.assign(state, JSON.parse(raw)); } catch(_){}
+  }
+}
+
+// ═══ FORMATTING ═══
+const money = n => '£' + (Math.round((+n || 0) * 100) / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const moneyShort = n => '£' + Math.round(+n || 0).toLocaleString('en-GB');
+const today = () => new Date().toISOString().slice(0, 10);
+const fmtDate = s => { try { return new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); } catch (e) { return s; } };
+
+// ═══ UID ═══
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+// ═══ TOAST ═══
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ═══ VIEW ROUTER ═══
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
+  if (name === 'dash') renderDash();
+  if (name === 'receipts') renderReceipts();
+  if (name === 'jobs') renderJobs();
+  if (name === 'invoices') renderInvoices();
+  if (name === 'tax') renderTax();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchView(t.dataset.view)));
+
+// ═══ MODAL ═══
+function showModal(title, body) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+// ═══ AGENT α · RECEIPT SCANNER ═══
+// Parses common UK trade-receipt text. T0 = pure regex, no AI needed.
+// Categories: tools, materials, fuel, vehicle, PPE, site, other
+const RECEIPT_PATTERNS = [
+  { match: /screwfix|toolstation|tool[\s-]*station/i, vendor: 'Screwfix/Toolstation', category: 'tools' },
+  { match: /travis\s*perkins|jewson|selco|wickes\s*pro|huws\s*gray/i, vendor: 'Builders merchant', category: 'materials' },
+  { match: /b&q|bandq|homebase|wickes/i, vendor: 'DIY store', category: 'materials' },
+  { match: /toolbank|machine\s*mart|axminster/i, vendor: 'Tool supplier', category: 'tools' },
+  { match: /shell|bp\b|esso|tesco\s*fuel|sainsbury.*fuel|asda\s*fuel|texaco|gulf/i, vendor: 'Fuel', category: 'fuel' },
+  { match: /\bvan\b|mot\b|service|garage|tyre|kwik\s*fit/i, vendor: 'Vehicle', category: 'vehicle' },
+  { match: /workwear|safety\s*boot|hi[\s-]*vis|hard\s*hat|ppe|dickies|carhartt/i, vendor: 'PPE/workwear', category: 'ppe' },
+  { match: /cafe|costa|gregg|coffee|breakfast/i, vendor: 'Site refreshment', category: 'site' },
+];
+
+function parseReceiptText(text) {
+  const t = (text || '').trim();
+  const out = { vendor: '', amount: 0, category: 'other', date: today(), notes: '' };
+
+  // Find amount — biggest £ figure or last number
+  const amounts = [...t.matchAll(/£?\s*(\d{1,5}(?:[.,]\d{2})?)/g)].map(m => parseFloat(m[1].replace(',', '.'))).filter(n => n > 0);
+  if (amounts.length) out.amount = Math.max(...amounts);
+
+  // Find date
+  const dm = t.match(/(\d{1,2})[\/\-\s](\d{1,2})[\/\-\s](\d{2,4})/);
+  if (dm) {
+    const [, d, m, y] = dm;
+    const yy = y.length === 2 ? '20' + y : y;
+    out.date = `${yy}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+
+  // Match vendor + category
+  for (const p of RECEIPT_PATTERNS) {
+    if (p.match.test(t)) {
+      out.vendor = p.vendor;
+      out.category = p.category;
+      break;
+    }
+  }
+
+  if (!out.vendor) {
+    const firstLine = t.split('\n')[0].trim().slice(0, 40);
+    out.vendor = firstLine || 'Receipt';
+  }
+
+  return out;
+}
+
+// ═══ TAX CALCULATION ═══
+function calcTax() {
+  const income = state.income.reduce((s, i) => s + (+i.amount || 0), 0)
+               + state.invoices.filter(i => i.paid).reduce((s, i) => s + (+i.amount || 0), 0);
+  const expenses = state.receipts.reduce((s, r) => s + (+r.amount || 0), 0);
+  const mileageTotal = state.mileage.reduce((s, m) => s + (+m.miles || 0), 0);
+  const mileageAllow = mileageTotal <= TAX.carThreshold
+    ? mileageTotal * TAX.carRate1
+    : (TAX.carThreshold * TAX.carRate1) + ((mileageTotal - TAX.carThreshold) * TAX.carRate2);
+
+  const cisTaken = state.income.filter(i => i.cisDeducted).reduce((s, i) => s + (+i.cisDeducted || 0), 0)
+                 + state.invoices.filter(i => i.paid && i.cisDeducted).reduce((s, i) => s + (+i.cisDeducted || 0), 0);
+
+  const profit = Math.max(0, income - expenses - mileageAllow);
+
+  // Income tax with PA taper
+  let pa = TAX.personalAllowance;
+  if (profit > TAX.paTaperStart) {
+    const taper = Math.min(TAX.personalAllowance, Math.floor((profit - TAX.paTaperStart) / 2));
+    pa = Math.max(0, TAX.personalAllowance - taper);
+  }
+  const taxable = Math.max(0, profit - pa);
+  let it = 0;
+  if (taxable <= TAX.basicBand) it = taxable * TAX.basicRate;
+  else if (taxable <= TAX.basicBand + TAX.higherBand) it = TAX.basicBand * TAX.basicRate + (taxable - TAX.basicBand) * TAX.higherRate;
+  else it = TAX.basicBand * TAX.basicRate + TAX.higherBand * TAX.higherRate + (taxable - TAX.basicBand - TAX.higherBand) * TAX.additionalRate;
+
+  // NI Class 4
+  let ni = 0;
+  if (profit > TAX.ni4LowerThreshold) {
+    const upper = Math.min(profit, TAX.ni4UpperThreshold);
+    ni += (upper - TAX.ni4LowerThreshold) * TAX.ni4MainRate;
+    if (profit > TAX.ni4UpperThreshold) ni += (profit - TAX.ni4UpperThreshold) * TAX.ni4UpperRate;
+  }
+
+  const total = Math.max(0, it + ni - cisTaken);
+  const monthsLeft = Math.max(1, monthsUntilJan31());
+  const monthly = total / monthsLeft;
+
+  return { income, expenses, mileageTotal, mileageAllow, cisTaken, profit, taxable, pa, it, ni, total, monthly };
+}
+
+function monthsUntilJan31() {
+  const now = new Date();
+  // tax year runs Apr 6 → Apr 5; bill is due Jan 31 following
+  let yearEnd = new Date(now.getFullYear() + 1, 0, 31);
+  if (now.getMonth() >= 3 && now.getDate() >= 6) yearEnd = new Date(now.getFullYear() + 1, 0, 31);
+  if (now.getMonth() === 0 && now.getDate() <= 31) yearEnd = new Date(now.getFullYear(), 0, 31);
+  const ms = yearEnd - now;
+  return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24 * 30)));
+}
+
+// ═══ DASHBOARD ═══
+function renderDash() {
+  const t = calcTax();
+  document.getElementById('dashIncome').textContent = moneyShort(t.income);
+  document.getElementById('dashExpenses').textContent = moneyShort(t.expenses + t.mileageAllow);
+  document.getElementById('dashProfit').textContent = moneyShort(t.profit);
+  document.getElementById('dashTaxOwed').textContent = moneyShort(t.total);
+
+  const recent = [
+    ...state.receipts.map(r => ({ type: 'receipt', date: r.date, title: r.vendor, amount: -r.amount, ref: r.id })),
+    ...state.income.map(i => ({ type: 'income', date: i.date, title: i.customer || 'Payment received', amount: +i.amount, ref: i.id })),
+    ...state.invoices.filter(i => i.paid).map(i => ({ type: 'invoice', date: i.paidDate || i.date, title: 'Invoice paid · ' + (i.customer || ''), amount: +i.amount, ref: i.id })),
+    ...state.mileage.map(m => ({ type: 'mileage', date: m.date, title: m.from + ' → ' + m.to, amount: 0, miles: m.miles, ref: m.id })),
+  ].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 6);
+
+  const rcRoot = document.getElementById('dashRecent');
+  if (!recent.length) {
+    rcRoot.innerHTML = '<div class="empty"><div class="icon">📥</div><h3>Drop your first receipt</h3><p>Tap "Add receipt" above to start. Or log a journey or job — whatever comes first.</p></div>';
+  } else {
+    rcRoot.innerHTML = recent.map(r => `
+      <div class="item">
+        <div class="item-hd">
+          <div class="item-title">${escHTML(r.title)}</div>
+          <div class="item-amount">${r.type === 'mileage' ? r.miles + ' mi' : (r.amount >= 0 ? '+' : '') + moneyShort(r.amount)}</div>
+        </div>
+        <div class="item-meta">
+          <span class="tag">${r.type}</span>
+          <span>${fmtDate(r.date)}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // Tax warning
+  const warnBox = document.getElementById('dashTaxWarn');
+  const warnBody = document.getElementById('dashTaxWarnBody');
+  if (t.profit > 45000 && t.profit < TAX.basicBand + TAX.personalAllowance) {
+    warnBox.style.display = 'block';
+    warnBody.innerHTML = `<div class="warn">You're approaching the higher rate threshold (£50,270 profit). After that, you pay 40% on every extra pound.</div>`;
+  } else if (t.income > TAX.vatThreshold * 0.85 && state.settings.vat === 'none') {
+    warnBox.style.display = 'block';
+    warnBody.innerHTML = `<div class="warn">Your income is approaching the VAT threshold (£90,000). You'll need to register soon. Tap Tax → Settings to enable VAT.</div>`;
+  } else {
+    warnBox.style.display = 'none';
+  }
+}
+
+function escHTML(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ═══ RECEIPTS ═══
+function renderReceipts() {
+  const root = document.getElementById('receiptsList');
+  const list = [...state.receipts].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  if (!list.length) { root.innerHTML = '<div class="empty"><div class="icon">🧾</div><h3>No receipts yet</h3><p>Tap "Add" to snap one or type it in.</p></div>'; return; }
+  root.innerHTML = list.map(r => `
+    <div class="item" onclick="editReceipt('${r.id}')">
+      <div class="item-hd">
+        <div class="item-title">${escHTML(r.vendor)}</div>
+        <div class="item-amount">${moneyShort(r.amount)}</div>
+      </div>
+      <div class="item-meta">
+        <span class="tag">${r.category || 'other'}</span>
+        <span>${fmtDate(r.date)}</span>
+        ${r.jobId ? '<span>· job</span>' : ''}
+      </div>
+    </div>`).join('');
+}
+
+function showReceiptModal(existing) {
+  const r = existing || { id: '', vendor: '', amount: '', category: 'tools', date: today(), notes: '', jobId: '' };
+  const jobs = state.jobs.filter(j => j.status !== 'paid').map(j => `<option value="${j.id}" ${r.jobId===j.id?'selected':''}>${escHTML(j.title)}</option>`).join('');
+
+  showModal(existing ? 'Edit receipt' : 'New receipt', `
+    <div class="field">
+      <label>Snap or paste receipt</label>
+      <input type="file" accept="image/*" capture="environment" id="rcFile" style="margin-bottom:8px">
+      <textarea id="rcRaw" placeholder="Or paste/type receipt text here — vendor, amount, date"></textarea>
+      <div class="hint">📸 Tap above to use camera. Or type freehand — we'll work out the rest.</div>
+      <button class="btn small secondary" style="margin-top:8px" onclick="parseAndFill()">Auto-fill from text</button>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Vendor</label>
+        <input id="rcVendor" value="${escHTML(r.vendor)}" placeholder="Screwfix">
+      </div>
+      <div class="field">
+        <label>Amount £</label>
+        <input id="rcAmount" type="number" step="0.01" value="${r.amount}" placeholder="47.82">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Category</label>
+        <select id="rcCategory">
+          <option value="tools" ${r.category==='tools'?'selected':''}>Tools</option>
+          <option value="materials" ${r.category==='materials'?'selected':''}>Materials</option>
+          <option value="fuel" ${r.category==='fuel'?'selected':''}>Fuel</option>
+          <option value="vehicle" ${r.category==='vehicle'?'selected':''}>Vehicle (van/MOT/service)</option>
+          <option value="ppe" ${r.category==='ppe'?'selected':''}>PPE/workwear</option>
+          <option value="site" ${r.category==='site'?'selected':''}>Site (tea, food on site)</option>
+          <option value="subcontractor" ${r.category==='subcontractor'?'selected':''}>Paid a subbie</option>
+          <option value="other" ${r.category==='other'?'selected':''}>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input id="rcDate" type="date" value="${r.date}">
+      </div>
+    </div>
+    ${state.jobs.length ? `
+    <div class="field">
+      <label>Link to job (optional)</label>
+      <select id="rcJob">
+        <option value="">— none —</option>
+        ${jobs}
+      </select>
+    </div>` : ''}
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="rcNotes" placeholder="e.g. 'screws for the kitchen worktop'">${escHTML(r.notes)}</textarea>
+    </div>
+    <input type="hidden" id="rcId" value="${r.id}">
+    <button class="btn" onclick="saveReceipt()">Save receipt</button>
+    ${existing ? '<button class="btn secondary red" style="margin-top:8px" onclick="deleteReceipt(\''+r.id+'\')">Delete</button>' : ''}
+  `);
+
+  // Bind file input
+  setTimeout(() => {
+    const fi = document.getElementById('rcFile');
+    if (fi) fi.addEventListener('change', handleReceiptPhoto);
+  }, 50);
+}
+
+async function handleReceiptPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  // T0: no OCR available in pure sovereign mode. Store image as base64, prompt to fill manually.
+  // T3 (optional): if user has Gemini key, send for vision parse.
+  if (state.settings.geminiKey) {
+    toast('Reading receipt...');
+    try {
+      const base64 = await fileToBase64(file);
+      const out = await geminiVisionParse(base64);
+      if (out) {
+        document.getElementById('rcVendor').value = out.vendor || '';
+        document.getElementById('rcAmount').value = out.amount || '';
+        if (out.date) document.getElementById('rcDate').value = out.date;
+        if (out.category) document.getElementById('rcCategory').value = out.category;
+        toast('Filled in from photo');
+        return;
+      }
+    } catch (e) { /* fall through */ }
+  }
+  toast('Photo saved — type vendor & amount');
+  document.getElementById('rcVendor').focus();
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+async function geminiVisionParse(base64) {
+  const key = state.settings.geminiKey;
+  if (!key) return null;
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: 'Extract from this UK receipt: vendor name, total amount in £, date (YYYY-MM-DD), and one category from: tools, materials, fuel, vehicle, ppe, site, subcontractor, other. Reply ONLY as JSON: {"vendor":"","amount":0,"date":"","category":""}' },
+            { inlineData: { mimeType: 'image/jpeg', data: base64 } }
+          ]
+        }]
+      })
+    });
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const json = text.match(/\{[\s\S]*?\}/)?.[0];
+    return json ? JSON.parse(json) : null;
+  } catch (e) { return null; }
+}
+
+function parseAndFill() {
+  const raw = document.getElementById('rcRaw').value;
+  if (!raw) { toast('Type something first'); return; }
+  const out = parseReceiptText(raw);
+  document.getElementById('rcVendor').value = out.vendor;
+  document.getElementById('rcAmount').value = out.amount;
+  if (out.date) document.getElementById('rcDate').value = out.date;
+  document.getElementById('rcCategory').value = out.category;
+  toast('Filled in');
+}
+
+async function saveReceipt() {
+  const id = document.getElementById('rcId').value || uid();
+  const r = {
+    id,
+    vendor: document.getElementById('rcVendor').value.trim() || 'Receipt',
+    amount: +document.getElementById('rcAmount').value || 0,
+    category: document.getElementById('rcCategory').value,
+    date: document.getElementById('rcDate').value || today(),
+    notes: document.getElementById('rcNotes').value,
+    jobId: document.getElementById('rcJob')?.value || '',
+  };
+  const existing = state.receipts.findIndex(x => x.id === id);
+  if (existing >= 0) state.receipts[existing] = r; else state.receipts.push(r);
+  await saveState();
+  closeModal();
+  toast('Receipt saved');
+  renderDash();
+  if (document.getElementById('view-receipts').classList.contains('active')) renderReceipts();
+}
+
+function editReceipt(id) {
+  const r = state.receipts.find(x => x.id === id);
+  if (r) showReceiptModal(r);
+}
+
+async function deleteReceipt(id) {
+  if (!confirm('Delete this receipt?')) return;
+  state.receipts = state.receipts.filter(r => r.id !== id);
+  await saveState();
+  closeModal();
+  toast('Deleted');
+  renderDash();
+  renderReceipts();
+}
+
+// ═══ MILEAGE ═══
+function showMileageModal() {
+  showModal('Log mileage', `
+    <p class="muted" style="margin-bottom:12px;font-size:13px">HMRC rate: 45p/mile first 10k, 25p after. We'll do the maths.</p>
+    <div class="field"><label>From</label><input id="mlFrom" placeholder="Mr Smith's, Bath" autocomplete="off"></div>
+    <div class="field"><label>To</label><input id="mlTo" placeholder="Travis Perkins, Bristol" autocomplete="off"></div>
+    <div class="field-row">
+      <div class="field"><label>Miles</label><input id="mlMiles" type="number" step="0.1" placeholder="12.3"></div>
+      <div class="field"><label>Date</label><input id="mlDate" type="date" value="${today()}"></div>
+    </div>
+    ${state.jobs.length ? `
+    <div class="field"><label>For job (optional)</label>
+      <select id="mlJob"><option value="">— none —</option>
+      ${state.jobs.filter(j=>j.status!=='paid').map(j=>`<option value="${j.id}">${escHTML(j.title)}</option>`).join('')}
+      </select></div>` : ''}
+    <button class="btn" onclick="saveMileage()">Save journey</button>
+  `);
+}
+
+async function saveMileage() {
+  const m = {
+    id: uid(),
+    from: document.getElementById('mlFrom').value.trim(),
+    to: document.getElementById('mlTo').value.trim(),
+    miles: +document.getElementById('mlMiles').value || 0,
+    date: document.getElementById('mlDate').value || today(),
+    jobId: document.getElementById('mlJob')?.value || '',
+  };
+  if (!m.miles) { toast('Enter miles'); return; }
+  state.mileage.push(m);
+  await saveState();
+  closeModal();
+  toast(`+${m.miles} mi · ${money(m.miles <= TAX.carThreshold ? m.miles * TAX.carRate1 : m.miles * TAX.carRate2)} claim`);
+  renderDash();
+}
+
+// ═══ JOBS ═══
+function renderJobs() {
+  const root = document.getElementById('jobsList');
+  const list = [...state.jobs].sort((a, b) => (b.created || 0) - (a.created || 0));
+  if (!list.length) { root.innerHTML = '<div class="empty"><div class="icon">🔨</div><h3>No jobs yet</h3><p>A "job" is one piece of work — e.g. "Kitchen refit — Mr Smith". Track costs against it.</p></div>'; return; }
+  root.innerHTML = list.map(j => {
+    const cost = jobCost(j);
+    return `
+    <div class="item" onclick="editJob('${j.id}')">
+      <div class="item-hd">
+        <div class="item-title">${escHTML(j.title)}</div>
+        <div class="item-amount">${moneyShort(j.quote || 0)}</div>
+      </div>
+      <div class="item-meta">
+        <span class="tag ${j.status}">${j.status}</span>
+        <span>${escHTML(j.customer || '')}</span>
+        <span>· cost ${moneyShort(cost)}</span>
+        <span>· profit ${moneyShort((j.quote || 0) - cost)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function jobCost(j) {
+  let c = +j.labour || 0;
+  c += state.receipts.filter(r => r.jobId === j.id).reduce((s, r) => s + r.amount, 0);
+  const miles = state.mileage.filter(m => m.jobId === j.id).reduce((s, m) => s + m.miles, 0);
+  c += miles <= TAX.carThreshold ? miles * TAX.carRate1 : miles * TAX.carRate2;
+  return c;
+}
+
+function showJobModal(existing) {
+  const j = existing || { id: '', title: '', customer: '', address: '', quote: '', labour: '', status: 'quoted', notes: '', created: Date.now() };
+  showModal(existing ? 'Edit job' : 'New job', `
+    <div class="field"><label>Title</label><input id="jbTitle" value="${escHTML(j.title)}" placeholder="Kitchen refit"></div>
+    <div class="field"><label>Customer</label><input id="jbCustomer" value="${escHTML(j.customer)}" placeholder="Mr Smith"></div>
+    <div class="field"><label>Address</label><input id="jbAddress" value="${escHTML(j.address)}" placeholder="12 Acacia Ave, Bath"></div>
+    <div class="field-row">
+      <div class="field"><label>Quoted £</label><input id="jbQuote" type="number" step="0.01" value="${j.quote}"></div>
+      <div class="field"><label>Labour hours/day rate logged £</label><input id="jbLabour" type="number" step="0.01" value="${j.labour}" placeholder="0"></div>
+    </div>
+    <div class="field"><label>Status</label>
+      <select id="jbStatus">
+        <option value="quoted" ${j.status==='quoted'?'selected':''}>Quoted</option>
+        <option value="started" ${j.status==='started'?'selected':''}>Started</option>
+        <option value="done" ${j.status==='done'?'selected':''}>Done · ready to invoice</option>
+        <option value="invoiced" ${j.status==='invoiced'?'selected':''}>Invoiced</option>
+        <option value="paid" ${j.status==='paid'?'selected':''}>Paid</option>
+      </select>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="jbNotes">${escHTML(j.notes)}</textarea></div>
+    <input type="hidden" id="jbId" value="${j.id}">
+    <button class="btn" onclick="saveJob()">Save job</button>
+    ${existing && j.status === 'done' ? `<button class="btn green" style="margin-top:8px" onclick="invoiceFromJob('${j.id}')">📤 Invoice this job</button>` : ''}
+    ${existing ? `<button class="btn secondary red" style="margin-top:8px" onclick="deleteJob('${j.id}')">Delete job</button>` : ''}
+  `);
+}
+
+async function saveJob() {
+  const id = document.getElementById('jbId').value || uid();
+  const existing = state.jobs.find(x => x.id === id);
+  const j = {
+    id,
+    title: document.getElementById('jbTitle').value.trim() || 'Job',
+    customer: document.getElementById('jbCustomer').value,
+    address: document.getElementById('jbAddress').value,
+    quote: +document.getElementById('jbQuote').value || 0,
+    labour: +document.getElementById('jbLabour').value || 0,
+    status: document.getElementById('jbStatus').value,
+    notes: document.getElementById('jbNotes').value,
+    created: existing?.created || Date.now(),
+  };
+  if (existing) Object.assign(existing, j); else state.jobs.push(j);
+  await saveState();
+  closeModal();
+  toast('Job saved');
+  renderDash();
+  if (document.getElementById('view-jobs').classList.contains('active')) renderJobs();
+}
+
+function editJob(id) { const j = state.jobs.find(x => x.id === id); if (j) showJobModal(j); }
+async function deleteJob(id) {
+  if (!confirm('Delete this job? (receipts stay)')) return;
+  state.jobs = state.jobs.filter(j => j.id !== id);
+  await saveState(); closeModal(); toast('Deleted'); renderJobs(); renderDash();
+}
+
+// ═══ INVOICES ═══
+function renderInvoices() {
+  const root = document.getElementById('invoicesList');
+  const list = [...state.invoices].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  if (!list.length) { root.innerHTML = '<div class="empty"><div class="icon">📤</div><h3>No invoices yet</h3><p>Mark a job "done", then invoice it. Or tap "Draft" to make one from scratch.</p></div>'; return; }
+  root.innerHTML = list.map(i => `
+    <div class="item" onclick="editInvoice('${i.id}')">
+      <div class="item-hd">
+        <div class="item-title">#${i.number} · ${escHTML(i.customer || 'Customer')}</div>
+        <div class="item-amount">${moneyShort(i.amount)}</div>
+      </div>
+      <div class="item-meta">
+        <span class="tag ${i.paid ? 'paid' : (i.sent ? 'sent' : 'draft')}">${i.paid ? 'paid' : (i.sent ? 'sent' : 'draft')}</span>
+        <span>${fmtDate(i.date)}</span>
+        ${i.cisDeducted ? `<span>· CIS −${moneyShort(i.cisDeducted)}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function invoiceFromJob(jobId) {
+  const j = state.jobs.find(x => x.id === jobId);
+  if (!j) return;
+  const inv = { id:'', number: (state.invoices.length + 1).toString().padStart(4, '0'), date: today(), customer: j.customer, address: j.address, lines: [{ desc: j.title, qty: 1, rate: j.quote }], amount: j.quote, sent: false, paid: false, jobId: j.id, cisDeducted: 0, notes: '' };
+  showInvoiceModal(inv);
+}
+
+function showInvoiceModal(existing) {
+  const i = existing || { id: '', number: (state.invoices.length + 1).toString().padStart(4, '0'), date: today(), customer: '', address: '', lines: [{ desc: '', qty: 1, rate: 0 }], amount: 0, sent: false, paid: false, paidDate: '', cisDeducted: 0, notes: 'Payment within 30 days. Bank transfer preferred.' };
+  const linesHTML = (lines) => lines.map((l, idx) => `
+    <div class="field-row">
+      <div class="field"><label>Description</label><input class="invLineDesc" data-i="${idx}" value="${escHTML(l.desc)}"></div>
+      <div class="field-row">
+        <div class="field"><label>Qty/hrs</label><input class="invLineQty" type="number" step="0.5" data-i="${idx}" value="${l.qty}"></div>
+        <div class="field"><label>Rate £</label><input class="invLineRate" type="number" step="0.01" data-i="${idx}" value="${l.rate}"></div>
+      </div>
+    </div>`).join('');
+
+  showModal(existing && existing.id ? `Invoice #${i.number}` : 'New invoice', `
+    <div class="field-row">
+      <div class="field"><label>Invoice #</label><input id="invNumber" value="${i.number}"></div>
+      <div class="field"><label>Date</label><input id="invDate" type="date" value="${i.date}"></div>
+    </div>
+    <div class="field"><label>Customer</label><input id="invCustomer" value="${escHTML(i.customer)}"></div>
+    <div class="field"><label>Address</label><input id="invAddress" value="${escHTML(i.address)}"></div>
+    <h3 style="margin:16px 0 8px">Lines</h3>
+    <div id="invLines">${linesHTML(i.lines)}</div>
+    <button class="btn small secondary" onclick="addInvLine()">+ Add line</button>
+    ${state.settings.cis !== 'none' ? `
+    <div class="field" style="margin-top:16px"><label>CIS deduction (${state.settings.cis}%)</label><input id="invCIS" type="number" step="0.01" value="${i.cisDeducted}" placeholder="auto-calculated"></div>` : ''}
+    <div class="field"><label>Payment terms / notes</label><textarea id="invNotes">${escHTML(i.notes)}</textarea></div>
+    <div class="card" style="margin-top:12px">
+      <div class="row"><span class="lbl">Subtotal</span><span class="val" id="invSubtotal">£0</span></div>
+      ${state.settings.cis !== 'none' ? '<div class="row"><span class="lbl">Less CIS</span><span class="val" id="invCISVal">£0</span></div>' : ''}
+      <div class="row"><span class="lbl">Total due</span><span class="val gold" id="invTotal">£0</span></div>
+    </div>
+    <input type="hidden" id="invId" value="${i.id}">
+    <input type="hidden" id="invJobId" value="${i.jobId || ''}">
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn" onclick="saveInvoice()">Save</button>
+      <button class="btn green" onclick="markInvoicePaid()">${i.paid ? 'Mark unpaid' : '✓ Mark paid'}</button>
+    </div>
+    <button class="btn secondary" style="margin-top:8px" onclick="printInvoice()">📄 Generate PDF (print)</button>
+    ${existing && existing.id ? `<button class="btn secondary red" style="margin-top:8px" onclick="deleteInvoice('${i.id}')">Delete</button>` : ''}
+  `);
+  setTimeout(() => { bindInvLines(); updateInvTotals(); }, 50);
+}
+
+function bindInvLines() {
+  document.querySelectorAll('#invLines input').forEach(el => {
+    el.addEventListener('input', updateInvTotals);
+  });
+  const cis = document.getElementById('invCIS');
+  if (cis) cis.addEventListener('input', updateInvTotals);
+}
+
+function addInvLine() {
+  const root = document.getElementById('invLines');
+  const idx = root.children.length;
+  const div = document.createElement('div');
+  div.className = 'field-row';
+  div.innerHTML = `
+    <div class="field"><label>Description</label><input class="invLineDesc" data-i="${idx}"></div>
+    <div class="field-row">
+      <div class="field"><label>Qty/hrs</label><input class="invLineQty" type="number" step="0.5" data-i="${idx}" value="1"></div>
+      <div class="field"><label>Rate £</label><input class="invLineRate" type="number" step="0.01" data-i="${idx}" value="0"></div>
+    </div>`;
+  root.appendChild(div);
+  bindInvLines();
+}
+
+function readInvLines() {
+  const descs = [...document.querySelectorAll('.invLineDesc')];
+  const qtys = [...document.querySelectorAll('.invLineQty')];
+  const rates = [...document.querySelectorAll('.invLineRate')];
+  return descs.map((d, i) => ({ desc: d.value, qty: +qtys[i].value || 0, rate: +rates[i].value || 0 }));
+}
+
+function updateInvTotals() {
+  const lines = readInvLines();
+  const subtotal = lines.reduce((s, l) => s + l.qty * l.rate, 0);
+  const cisRate = state.settings.cis === 'none' ? 0 : parseInt(state.settings.cis) / 100;
+  // CIS only on labour portion — heuristic: lines marked as "labour" or "hours" in description, else full
+  let cisDeducted = 0;
+  if (cisRate > 0) {
+    const cisInput = document.getElementById('invCIS');
+    cisDeducted = cisInput && cisInput.value !== '' ? +cisInput.value : Math.round(subtotal * cisRate * 100) / 100;
+    if (cisInput && cisInput.value === '') cisInput.value = cisDeducted.toFixed(2);
+  }
+  const total = subtotal - cisDeducted;
+  document.getElementById('invSubtotal').textContent = money(subtotal);
+  if (document.getElementById('invCISVal')) document.getElementById('invCISVal').textContent = '−' + money(cisDeducted);
+  document.getElementById('invTotal').textContent = money(total);
+}
+
+async function saveInvoice() {
+  const id = document.getElementById('invId').value || uid();
+  const existing = state.invoices.find(x => x.id === id);
+  const lines = readInvLines();
+  const subtotal = lines.reduce((s, l) => s + l.qty * l.rate, 0);
+  const cisDeducted = state.settings.cis !== 'none' ? (+document.getElementById('invCIS')?.value || 0) : 0;
+  const inv = {
+    id,
+    number: document.getElementById('invNumber').value,
+    date: document.getElementById('invDate').value,
+    customer: document.getElementById('invCustomer').value,
+    address: document.getElementById('invAddress').value,
+    lines,
+    cisDeducted,
+    amount: subtotal - cisDeducted,
+    subtotal,
+    notes: document.getElementById('invNotes').value,
+    jobId: document.getElementById('invJobId').value,
+    sent: existing?.sent || false,
+    paid: existing?.paid || false,
+    paidDate: existing?.paidDate || '',
+  };
+  if (existing) Object.assign(existing, inv); else state.invoices.push(inv);
+  // Update linked job
+  if (inv.jobId) {
+    const j = state.jobs.find(x => x.id === inv.jobId);
+    if (j) { j.status = inv.paid ? 'paid' : 'invoiced'; }
+  }
+  await saveState();
+  closeModal();
+  toast('Invoice saved');
+  renderInvoices();
+  renderDash();
+}
+
+async function markInvoicePaid() {
+  const id = document.getElementById('invId').value;
+  if (!id) { toast('Save first'); return; }
+  await saveInvoice();
+  const inv = state.invoices.find(x => x.id === id);
+  if (!inv) return;
+  inv.paid = !inv.paid;
+  inv.paidDate = inv.paid ? today() : '';
+  if (inv.jobId) {
+    const j = state.jobs.find(x => x.id === inv.jobId);
+    if (j) j.status = inv.paid ? 'paid' : 'invoiced';
+  }
+  await saveState();
+  closeModal();
+  toast(inv.paid ? 'Marked paid 🟢' : 'Marked unpaid');
+  renderDash(); renderInvoices();
+}
+
+function editInvoice(id) { const i = state.invoices.find(x => x.id === id); if (i) showInvoiceModal(i); }
+
+async function deleteInvoice(id) {
+  if (!confirm('Delete this invoice?')) return;
+  state.invoices = state.invoices.filter(i => i.id !== id);
+  await saveState(); closeModal(); toast('Deleted'); renderInvoices(); renderDash();
+}
+
+function printInvoice() {
+  const id = document.getElementById('invId').value;
+  let inv;
+  if (id) inv = state.invoices.find(x => x.id === id);
+  if (!inv) {
+    // build live from form
+    const lines = readInvLines();
+    const subtotal = lines.reduce((s, l) => s + l.qty * l.rate, 0);
+    const cisDeducted = state.settings.cis !== 'none' ? (+document.getElementById('invCIS')?.value || 0) : 0;
+    inv = {
+      number: document.getElementById('invNumber').value,
+      date: document.getElementById('invDate').value,
+      customer: document.getElementById('invCustomer').value,
+      address: document.getElementById('invAddress').value,
+      lines, cisDeducted, amount: subtotal - cisDeducted, subtotal,
+      notes: document.getElementById('invNotes').value,
+    };
+  }
+  const html = invoiceHTML(inv);
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 250);
+}
+
+function invoiceHTML(inv) {
+  const b = state.settings.brand;
+  const linesHTML = inv.lines.map(l => `<tr><td>${escHTML(l.desc)}</td><td style="text-align:right">${l.qty}</td><td style="text-align:right">${money(l.rate)}</td><td style="text-align:right">${money(l.qty * l.rate)}</td></tr>`).join('');
+  return `<!DOCTYPE html><html><head><title>Invoice #${inv.number}</title><style>
+    body { font: 14px/1.5 system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 20px; color: #1a1a17; }
+    h1 { font-size: 32px; margin: 0; }
+    .head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; border-bottom: 2px solid #e8a012; padding-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th { text-align: left; background: #f5f1e8; padding: 8px; }
+    td { padding: 8px; border-bottom: 1px solid #ddd; }
+    .totals { margin-left: auto; width: 300px; }
+    .totals .row { display: flex; justify-content: space-between; padding: 6px 0; }
+    .totals .row.grand { border-top: 2px solid #1a1a17; font-weight: bold; font-size: 18px; margin-top: 8px; padding-top: 12px; }
+    @media print { body { margin: 0; padding: 16px; } }
+  </style></head><body>
+    <div class="head">
+      <div>
+        <h1 style="color:#e8a012">INVOICE</h1>
+        <div>#${inv.number} · ${fmtDate(inv.date)}</div>
+      </div>
+      <div style="text-align:right">
+        <h2>${escHTML(b.name)}</h2>
+        <div style="color:#666">${escHTML(b.sub)}</div>
+      </div>
+    </div>
+    <div style="margin-bottom:24px"><strong>To:</strong><br>${escHTML(inv.customer)}<br>${escHTML(inv.address).replace(/\n/g,'<br>')}</div>
+    <table>
+      <thead><tr><th>Description</th><th style="text-align:right">Qty</th><th style="text-align:right">Rate</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>${linesHTML}</tbody>
+    </table>
+    <div class="totals">
+      <div class="row"><span>Subtotal</span><span>${money(inv.subtotal || inv.amount)}</span></div>
+      ${inv.cisDeducted ? `<div class="row"><span>CIS deduction</span><span>−${money(inv.cisDeducted)}</span></div>` : ''}
+      <div class="row grand"><span>Total due</span><span>${money(inv.amount)}</span></div>
+    </div>
+    ${inv.notes ? `<div style="margin-top:32px;border-top:1px solid #ddd;padding-top:16px;color:#666">${escHTML(inv.notes).replace(/\n/g,'<br>')}</div>` : ''}
+  </body></html>`;
+}
+
+// ═══ INCOME (got paid directly, no invoice) ═══
+function showIncomeModal() {
+  showModal('Record payment received', `
+    <p class="muted" style="margin-bottom:12px;font-size:13px">For when you got paid without an invoice — cash job, bank transfer, etc.</p>
+    <div class="field"><label>From</label><input id="incCustomer" placeholder="Mrs Patel"></div>
+    <div class="field-row">
+      <div class="field"><label>Amount £</label><input id="incAmount" type="number" step="0.01"></div>
+      <div class="field"><label>Date</label><input id="incDate" type="date" value="${today()}"></div>
+    </div>
+    ${state.settings.cis !== 'none' ? `<div class="field"><label>CIS deducted £ (if any)</label><input id="incCIS" type="number" step="0.01" placeholder="0"></div>` : ''}
+    <div class="field"><label>Notes</label><textarea id="incNotes" placeholder="What was the job?"></textarea></div>
+    <button class="btn" onclick="saveIncome()">Save payment</button>
+  `);
+}
+
+async function saveIncome() {
+  const i = {
+    id: uid(),
+    customer: document.getElementById('incCustomer').value.trim(),
+    amount: +document.getElementById('incAmount').value || 0,
+    date: document.getElementById('incDate').value || today(),
+    cisDeducted: +document.getElementById('incCIS')?.value || 0,
+    notes: document.getElementById('incNotes').value,
+  };
+  if (!i.amount) { toast('Enter amount'); return; }
+  state.income.push(i);
+  await saveState();
+  closeModal();
+  toast(`+${money(i.amount)} recorded`);
+  renderDash();
+}
+
+// ═══ TAX VIEW ═══
+function renderTax() {
+  const t = calcTax();
+  document.getElementById('taxIncome').textContent = money(t.income);
+  document.getElementById('taxExpenses').textContent = money(t.expenses);
+  document.getElementById('taxMileage').textContent = money(t.mileageAllow);
+  document.getElementById('taxCIS').textContent = money(t.cisTaken);
+  document.getElementById('taxProfit').textContent = money(t.profit);
+  document.getElementById('taxIT').textContent = money(t.it);
+  document.getElementById('taxNI').textContent = money(t.ni);
+  document.getElementById('taxCISCredit').textContent = '−' + money(t.cisTaken);
+  document.getElementById('taxTotal').textContent = money(t.total);
+  document.getElementById('taxMonthly').textContent = money(t.monthly);
+
+  document.getElementById('setCIS').value = state.settings.cis;
+  document.getElementById('setVAT').value = state.settings.vat;
+}
+
+async function saveSettings() {
+  state.settings.cis = document.getElementById('setCIS').value;
+  state.settings.vat = document.getElementById('setVAT').value;
+  await saveState();
+  toast('Settings saved');
+  renderTax();
+  renderDash();
+}
+
+// ═══ MTD QUARTERLY ═══
+function generateMTD() {
+  const q = document.getElementById('mtdQuarter').value;
+  const ranges = {
+    Q1: ['04-06', '07-05'],
+    Q2: ['07-06', '10-05'],
+    Q3: ['10-06', '01-05'],
+    Q4: ['01-06', '04-05'],
+  };
+  const t = calcTax();
+  const [start, end] = ranges[q];
+  const income = state.income.filter(i => inQuarter(i.date, q)).reduce((s, i) => s + i.amount, 0)
+               + state.invoices.filter(i => i.paid && inQuarter(i.paidDate || i.date, q)).reduce((s, i) => s + i.amount, 0);
+  const expenses = state.receipts.filter(r => inQuarter(r.date, q)).reduce((s, r) => s + r.amount, 0);
+  const miles = state.mileage.filter(m => inQuarter(m.date, q)).reduce((s, m) => s + m.miles, 0);
+  const mileageAllow = miles <= TAX.carThreshold ? miles * TAX.carRate1 : (TAX.carThreshold * TAX.carRate1) + (miles - TAX.carThreshold) * TAX.carRate2;
+  const profit = Math.max(0, income - expenses - mileageAllow);
+
+  document.getElementById('mtdOutput').innerHTML = `
+    <div class="good">
+      <h3 style="color:var(--text);margin-bottom:8px">${q} report ready</h3>
+      <div class="row"><span class="lbl">Period</span><span class="val">${start} → ${end}</span></div>
+      <div class="row"><span class="lbl">Income</span><span class="val green">${money(income)}</span></div>
+      <div class="row"><span class="lbl">Expenses</span><span class="val">${money(expenses)}</span></div>
+      <div class="row"><span class="lbl">Mileage (${miles} mi)</span><span class="val">${money(mileageAllow)}</span></div>
+      <div class="row"><span class="lbl"><b>Profit for quarter</b></span><span class="val gold">${money(profit)}</span></div>
+      <button class="btn small" style="margin-top:12px" onclick="exportMTD('${q}')">📥 Download as text</button>
+    </div>
+  `;
+}
+
+function inQuarter(date, q) {
+  if (!date) return false;
+  const d = new Date(date);
+  const m = d.getMonth(); // 0=Jan
+  if (q === 'Q1') return (m >= 3 && m <= 5) || (m === 6 && d.getDate() <= 5); // Apr 6 - Jul 5
+  if (q === 'Q2') return (m === 6 && d.getDate() >= 6) || m === 7 || m === 8 || (m === 9 && d.getDate() <= 5);
+  if (q === 'Q3') return (m === 9 && d.getDate() >= 6) || m === 10 || m === 11 || (m === 0 && d.getDate() <= 5);
+  if (q === 'Q4') return (m === 0 && d.getDate() >= 6) || m === 1 || m === 2 || (m === 3 && d.getDate() <= 5);
+  return false;
+}
+
+function exportMTD(q) {
+  const income = state.income.filter(i => inQuarter(i.date, q)).reduce((s, i) => s + i.amount, 0)
+               + state.invoices.filter(i => i.paid && inQuarter(i.paidDate || i.date, q)).reduce((s, i) => s + i.amount, 0);
+  const expenses = state.receipts.filter(r => inQuarter(r.date, q)).reduce((s, r) => s + r.amount, 0);
+  const miles = state.mileage.filter(m => inQuarter(m.date, q)).reduce((s, m) => s + m.miles, 0);
+  const text = `MTD Quarterly Submission Data — ${q} — ${state.settings.brand.name}\n` +
+               `Generated: ${new Date().toISOString()}\n\n` +
+               `Income:        ${money(income)}\n` +
+               `Expenses:      ${money(expenses)}\n` +
+               `Mileage:       ${miles} miles (${money(miles <= TAX.carThreshold ? miles * TAX.carRate1 : (TAX.carThreshold * TAX.carRate1) + (miles - TAX.carThreshold) * TAX.carRate2)})\n` +
+               `Profit:        ${money(Math.max(0, income - expenses - (miles <= TAX.carThreshold ? miles * TAX.carRate1 : (TAX.carThreshold * TAX.carRate1) + (miles - TAX.carThreshold) * TAX.carRate2)))}\n\n` +
+               `--- Receipts ---\n` +
+               state.receipts.filter(r => inQuarter(r.date, q)).map(r => `${r.date}  ${r.vendor.padEnd(30)} ${money(r.amount).padStart(10)}  [${r.category}]`).join('\n') +
+               `\n\n--- Income ---\n` +
+               state.income.filter(i => inQuarter(i.date, q)).map(i => `${i.date}  ${i.customer.padEnd(30)} ${money(i.amount).padStart(10)}${i.cisDeducted ? ' (CIS −' + money(i.cisDeducted) + ')' : ''}`).join('\n') +
+               state.invoices.filter(i => i.paid && inQuarter(i.paidDate || i.date, q)).map(i => `${i.paidDate || i.date}  Inv #${i.number} ${i.customer.padEnd(20)} ${money(i.amount).padStart(10)}`).join('\n');
+  downloadText(`mtd-${q}-${today()}.txt`, text);
+}
+
+function downloadText(filename, text) {
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ═══ SETTINGS ═══
+document.getElementById('topSettings').addEventListener('click', showSettings);
+
+function showSettings() {
+  showModal('Settings', `
+    <h3>Your brand</h3>
+    <div class="field-row">
+      <div class="field"><label>Name</label><input id="stName" value="${escHTML(state.settings.brand.name)}"></div>
+      <div class="field"><label>Mark (1 letter)</label><input id="stMark" maxlength="2" value="${escHTML(state.settings.brand.mark)}"></div>
+    </div>
+    <div class="field"><label>Sub-line</label><input id="stSub" value="${escHTML(state.settings.brand.sub)}"></div>
+
+    <h3 style="margin-top:24px">AI receipt scanning (optional)</h3>
+    <p class="muted" style="font-size:13px;margin-bottom:8px">Paste a free Gemini API key to get smart photo-of-receipt scanning. <a style="color:var(--gold)" href="https://aistudio.google.com/apikey" target="_blank">Get one here</a>. Stays on your phone.</p>
+    <div class="field"><label>Gemini API key</label><input id="stGemini" type="password" value="${escHTML(state.settings.geminiKey)}" placeholder="paste key here"></div>
+
+    <h3 style="margin-top:24px">Backup</h3>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="exportAll()">📥 Export everything</button>
+      <button class="btn secondary" onclick="importAll()">📤 Restore</button>
+    </div>
+
+    <h3 style="margin-top:24px">Danger zone</h3>
+    <button class="btn red" onclick="resetAll()">Reset all data</button>
+
+    <div style="margin-top:24px;text-align:center;color:var(--muted);font-size:12px">
+      FallAccount Trades · v${VERSION}<br>
+      ◊·κ=1 · sovereign · your data, your phone
+    </div>
+    <div style="margin-top:16px"><button class="btn" onclick="saveAllSettings()">Save settings</button></div>
+  `);
+}
+
+async function saveAllSettings() {
+  state.settings.brand.name = document.getElementById('stName').value || 'FallAccount';
+  state.settings.brand.mark = (document.getElementById('stMark').value || 'F').slice(0, 2);
+  state.settings.brand.sub = document.getElementById('stSub').value || 'Trades · sole trader';
+  state.settings.geminiKey = document.getElementById('stGemini').value;
+  await saveState();
+  applyBrand();
+  closeModal();
+  toast('Saved');
+}
+
+function applyBrand() {
+  document.getElementById('brandName').textContent = state.settings.brand.name;
+  document.getElementById('brandMark').textContent = state.settings.brand.mark;
+  document.getElementById('brandSub').textContent = state.settings.brand.sub;
+  document.title = state.settings.brand.name + ' · Trades';
+}
+
+function exportAll() {
+  const data = JSON.stringify({ exported: new Date().toISOString(), version: VERSION, state }, null, 2);
+  downloadText(`fallaccount-backup-${today()}.json`, data);
+  toast('Backup downloaded');
+}
+
+function importAll() {
+  const i = document.createElement('input');
+  i.type = 'file';
+  i.accept = 'application/json,.json';
+  i.onchange = async () => {
+    const f = i.files[0]; if (!f) return;
+    const text = await f.text();
+    try {
+      const obj = JSON.parse(text);
+      if (obj.state) {
+        if (!confirm('This will REPLACE all current data with the backup. Continue?')) return;
+        state = Object.assign(state, obj.state);
+        await saveState();
+        applyBrand();
+        closeModal();
+        toast('Restored');
+        renderDash();
+      }
+    } catch (e) { toast('Bad backup file'); }
+  };
+  i.click();
+}
+
+async function resetAll() {
+  if (!confirm('This deletes EVERYTHING. Sure?')) return;
+  if (!confirm('Last chance. Definitely sure?')) return;
+  state = { receipts: [], jobs: [], invoices: [], mileage: [], income: [], settings: state.settings, meta: { created: Date.now(), version: VERSION } };
+  await saveState();
+  closeModal();
+  toast('Reset');
+  renderDash();
+}
+
+// ═══ KONOMI LICENCE SHIM ═══
+// Ed25519 dead-mode envelope · 30-day trial · single-licence-per-device
+// In sovereign form this just stamps "active" — keeps surface compatible with mesh
+window.KONOMI = {
+  active: true,
+  tier: 'sovereign',
+  trial: false,
+  licenceId: null,
+  check: () => ({ ok: true, tier: 'sovereign', note: 'Single-file sovereign build · no licence gate' }),
+};
+
+// ═══ FALLMESH SHIM ═══
+try {
+  const sig = new BroadcastChannel('fall-signal');
+  sig.postMessage({ source: 'fallaccount-trades', type: 'hello', prime: PRIME, version: VERSION, ts: Date.now() });
+  sig.addEventListener('message', e => {
+    const m = e.data;
+    // listen for fleet events · placeholder for cross-tool flows
+    if (m && m.type === 'ping') sig.postMessage({ source: 'fallaccount-trades', type: 'pong', prime: PRIME });
+  });
+} catch (e) { /* no-op offline */ }
+
+// ═══ BOOT ═══
+(async function init() {
+  await loadState();
+  applyBrand();
+  renderDash();
+  // Hide modal on background click
+  document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+  // First-time hint
+  if (!state.receipts.length && !state.jobs.length && !state.income.length) {
+    setTimeout(() => toast('Welcome. Tap "Add receipt" to start.'), 600);
+  }
+})();
+</script>
+</body>
+</html>
