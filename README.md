@@ -1,6 +1,8 @@
-# FallAccount · Trades
+# FallAccount Trades
 
 **A sovereign accounts app for UK builders, plumbers, sparkies, plasterers and other sole-trader trades.**
+
+> A proper business. Ivan's tool. Yours after you fork it.
 
 One HTML file. Opens in any browser. Lives on your phone. Your data never leaves your device.
 

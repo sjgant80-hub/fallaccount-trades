@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#1a1a17">
-<title>FallAccount · Trades</title>
-<link rel="manifest" href='data:application/manifest+json,{"name":"FallAccount Trades","short_name":"FallAccount","start_url":".","display":"standalone","background_color":"#1a1a17","theme_color":"#e8a012","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 fill=%22%231a1a17%22/><text x=%2232%22 y=%2244%22 text-anchor=%22middle%22 font-size=%2236%22 fill=%22%23e8a012%22 font-family=%22sans-serif%22 font-weight=%22bold%22>F</text></svg>","sizes":"any","type":"image/svg+xml"}]}'>
+<title>FallAccount Trades</title>
+<link rel="manifest" href='data:application/manifest+json,{"name":"FallAccount Trades","short_name":"FA Trades","start_url":".","display":"standalone","background_color":"#1a1a17","theme_color":"#e8a012","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 fill=%22%231a1a17%22/><text x=%2232%22 y=%2244%22 text-anchor=%22middle%22 font-size=%2236%22 fill=%22%23e8a012%22 font-family=%22sans-serif%22 font-weight=%22bold%22>F</text></svg>","sizes":"any","type":"image/svg+xml"}]}'>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -137,8 +137,8 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
     <div class="brand">
       <div class="brand-mark" id="brandMark">F</div>
       <div>
-        <div class="brand-name" id="brandName">FallAccount</div>
-        <div class="brand-sub" id="brandSub">Trades · sole trader</div>
+        <div class="brand-name" id="brandName">FallAccount Trades</div>
+        <div class="brand-sub" id="brandSub">sole trader · UK</div>
       </div>
     </div>
     <div class="top-actions">
@@ -360,7 +360,7 @@ let state = {
   settings: {
     cis: 'none',
     vat: 'none',
-    brand: { name: 'FallAccount', mark: 'F', sub: 'Trades · sole trader' },
+    brand: { name: 'FallAccount Trades', mark: 'F', sub: 'sole trader · UK' },
     geminiKey: '',
   },
   meta: { created: Date.now(), version: VERSION },
@@ -1303,9 +1303,9 @@ function showSettings() {
 }
 
 async function saveAllSettings() {
-  state.settings.brand.name = document.getElementById('stName').value || 'FallAccount';
+  state.settings.brand.name = document.getElementById('stName').value || 'FallAccount Trades';
   state.settings.brand.mark = (document.getElementById('stMark').value || 'F').slice(0, 2);
-  state.settings.brand.sub = document.getElementById('stSub').value || 'Trades · sole trader';
+  state.settings.brand.sub = document.getElementById('stSub').value || 'sole trader · UK';
   state.settings.geminiKey = document.getElementById('stGemini').value;
   await saveState();
   applyBrand();
@@ -1317,7 +1317,7 @@ function applyBrand() {
   document.getElementById('brandName').textContent = state.settings.brand.name;
   document.getElementById('brandMark').textContent = state.settings.brand.mark;
   document.getElementById('brandSub').textContent = state.settings.brand.sub;
-  document.title = state.settings.brand.name + ' · Trades';
+  document.title = state.settings.brand.name;
 }
 
 function exportAll() {
