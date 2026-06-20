@@ -755,7 +755,8 @@ function extractJSON(text) {
 }
 
 // extend Cascade with vision support
-Cascade.visionParse = async function (base64) {
+window.Cascade = window.Cascade || {};
+window.Cascade.visionParse = async function (base64) {
   const s = state.settings;
   // Try providers in priority order: Anthropic > OpenAI > Gemini > OpenRouter > Local
   if (s.anthropicKey) {
@@ -867,7 +868,7 @@ Cascade.visionParse = async function (base64) {
 };
 
 // also: smart-text-fill for the manual paste box, using whichever LLM is available
-Cascade.parseReceiptText = async function (text) {
+window.Cascade.parseReceiptText = async function (text) {
   if (!text) return null;
   // Try T0 regex first (instant)
   const t0 = parseReceiptText(text);
@@ -1411,10 +1412,10 @@ function exportMTD(q) {
                `Mileage:       ${miles} miles (${money(miles <= TAX.carThreshold ? miles * TAX.carRate1 : (TAX.carThreshold * TAX.carRate1) + (miles - TAX.carThreshold) * TAX.carRate2)})\n` +
                `Profit:        ${money(Math.max(0, income - expenses - (miles <= TAX.carThreshold ? miles * TAX.carRate1 : (TAX.carThreshold * TAX.carRate1) + (miles - TAX.carThreshold) * TAX.carRate2)))}\n\n` +
                `--- Receipts ---\n` +
-               state.receipts.filter(r => inQuarter(r.date, q)).map(r => `${r.date}  ${r.vendor.padEnd(30)} ${money(r.amount).padStart(10)}  [${r.category}]`).join('\n') +
+               state.receipts.filter(r => inQuarter(r.date, q)).map(r => `${r.date}  ${(r.vendor||'').padEnd(30)} ${money(r.amount).padStart(10)}  [${r.category||''}]`).join('\n') +
                `\n\n--- Income ---\n` +
-               state.income.filter(i => inQuarter(i.date, q)).map(i => `${i.date}  ${i.customer.padEnd(30)} ${money(i.amount).padStart(10)}${i.cisDeducted ? ' (CIS −' + money(i.cisDeducted) + ')' : ''}`).join('\n') +
-               state.invoices.filter(i => i.paid && inQuarter(i.paidDate || i.date, q)).map(i => `${i.paidDate || i.date}  Inv #${i.number} ${i.customer.padEnd(20)} ${money(i.amount).padStart(10)}`).join('\n');
+               state.income.filter(i => inQuarter(i.date, q)).map(i => `${i.date}  ${(i.customer||'').padEnd(30)} ${money(i.amount).padStart(10)}${i.cisDeducted ? ' (CIS −' + money(i.cisDeducted) + ')' : ''}`).join('\n') +
+               state.invoices.filter(i => i.paid && inQuarter(i.paidDate || i.date, q)).map(i => `${i.paidDate || i.date}  Inv #${i.number} ${(i.customer||'').padEnd(20)} ${money(i.amount).padStart(10)}`).join('\n');
   downloadText(`mtd-${q}-${today()}.txt`, text);
 }
 
@@ -1557,7 +1558,7 @@ function bloom(text) {
 }
 
 // ═══ CASCADE · T0 → T3 ═══
-const Cascade = {
+Object.assign(window.Cascade, {
   // probe what's available right now
   async detectTier() {
     if (window.webllm && window.webllm.ready) return 'T1';
@@ -1649,7 +1650,8 @@ const Cascade = {
       max_tokens: 800,
     }).then(r => r.choices?.[0]?.message?.content || '');
   },
-};
+});
+var Cascade = window.Cascade;
 
 // ═══ KCC · contribution ledger · silent ═══
 const KCC = {
