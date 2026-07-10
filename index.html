@@ -170,22 +170,19 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
     'llama-3b':  { id: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',   size: '~2GB',   label: '3B · balanced · default · most laptops' },
     'qwen-7b':   { id: 'Qwen2.5-7B-Instruct-q4f16_1-MLC',     size: '~5GB',   label: '7B · capable · needs decent GPU (M-series Mac / 8GB+ VRAM)' },
     'llama-8b':  { id: 'Llama-3.1-8B-Instruct-q4f16_1-MLC',   size: '~5GB',   label: '8B · common · needs decent GPU' },
-    'llama-70b': { id: 'Llama-3.1-70B-Instruct-q4f16_1-MLC',  size: '~40GB',  label: '70B · frontier · needs serious GPU + 64GB+ RAM' },
-  };
+    'llama-70b': { id: 'Llama-3.1-70B-Instruct-q4f16_1-MLC',  size: '~40GB',  label: '70B · frontier · needs serious GPU + 64GB+ RAM' }};
   const DEFAULT_MODEL = 'llama-3b';
 
   const T3_PROVIDERS = {
     anthropic: { label: 'Anthropic Claude', models: ['claude-sonnet-4-5','claude-opus-4-7','claude-haiku-4-5'], default: 'claude-sonnet-4-5', url: 'https://api.anthropic.com/v1/messages' },
     openai:    { label: 'OpenAI',           models: ['gpt-4o','gpt-4o-mini','o1-mini'],                          default: 'gpt-4o-mini',      url: 'https://api.openai.com/v1/chat/completions' },
-    google:    { label: 'Google Gemini',    models: ['gemini-1.5-pro','gemini-1.5-flash','gemini-2.0-flash-exp'], default: 'gemini-1.5-flash', url: 'https://generativelanguage.googleapis.com/v1beta/models/' },
-  };
+    google:    { label: 'Google Gemini',    models: ['gemini-1.5-pro','gemini-1.5-flash','gemini-2.0-flash-exp'], default: 'gemini-1.5-flash', url: 'https://generativelanguage.googleapis.com/v1beta/models/' }};
 
   // ─── State ───────────────────────────────────────────────────────
   const STATE = {
     config: loadConfig(),
     ai: { ready: false, loading: false, progress: 0, engine: null, model: null },
-    mesh: { active: false, peers: new Map(), bc: null, signal: null },
-  };
+    mesh: { active: false, peers: new Map(), bc: null, signal: null }};
 
   function loadConfig() {
     try { return JSON.parse(localStorage.getItem('fall-kit.config') || '{}'); }
@@ -252,8 +249,7 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
     if (tier === 'T2' && STATE.ai.ready && STATE.ai.engine) {
       const r = await STATE.ai.engine.chat.completions.create({
         messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }],
-        max_tokens: maxTokens,
-      });
+        max_tokens: maxTokens});
       return r.choices[0].message.content;
     }
     if (tier === 'T3' && STATE.config.api_key && STATE.config.api_provider) {
@@ -270,8 +266,7 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
       const r = await fetch(T3_PROVIDERS.anthropic.url, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model, max_tokens: maxTokens, system: sys, messages: [{ role: 'user', content: msg }] }),
-      });
+        body: JSON.stringify({ model, max_tokens: maxTokens, system: sys, messages: [{ role: 'user', content: msg }] })});
       if (!r.ok) throw new Error('Anthropic ' + r.status + ': ' + (await r.text()).slice(0, 200));
       const j = await r.json();
       return j.content[0].text;
@@ -280,8 +275,7 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
       const r = await fetch(T3_PROVIDERS.openai.url, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'Authorization': 'Bearer ' + key },
-        body: JSON.stringify({ model, max_tokens: maxTokens, messages: [{ role: 'system', content: sys }, { role: 'user', content: msg }] }),
-      });
+        body: JSON.stringify({ model, max_tokens: maxTokens, messages: [{ role: 'system', content: sys }, { role: 'user', content: msg }] })});
       if (!r.ok) throw new Error('OpenAI ' + r.status);
       const j = await r.json();
       return j.choices[0].message.content;
@@ -290,8 +284,7 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
       const r = await fetch(T3_PROVIDERS.google.url + model + ':generateContent?key=' + encodeURIComponent(key), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: sys + '\n\n---\n\n' + msg }] }], generationConfig: { maxOutputTokens: maxTokens } }),
-      });
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: sys + '\n\n---\n\n' + msg }] }], generationConfig: { maxOutputTokens: maxTokens } })});
       if (!r.ok) throw new Error('Google ' + r.status);
       const j = await r.json();
       return j.candidates[0].content.parts[0].text;
@@ -532,8 +525,7 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
     openMint: openMint,  // v1.2 · launch kcc-mint with this seed prefilled as parent
     MODELS: WEBLLM_MODELS,
     PROVIDERS: T3_PROVIDERS,
-    state: STATE,
-  };
+    state: STATE};
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
@@ -598,21 +590,21 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
   <div class="card">
     <div class="grid-2">
       <div class="stat">
-        <div class="num green" id="dashIncome">£0</div>
+        <div class="num green" id="dashIncome">TBA</div>
         <div class="lbl">Income this year</div>
       </div>
       <div class="stat">
-        <div class="num" id="dashExpenses">£0</div>
+        <div class="num" id="dashExpenses">TBA</div>
         <div class="lbl">Expenses this year</div>
       </div>
     </div>
     <div class="grid-2">
       <div class="stat">
-        <div class="num gold" id="dashProfit">£0</div>
+        <div class="num gold" id="dashProfit">TBA</div>
         <div class="lbl">Profit (income − exp.)</div>
       </div>
       <div class="stat">
-        <div class="num red" id="dashTaxOwed">£0</div>
+        <div class="num red" id="dashTaxOwed">TBA</div>
         <div class="lbl">Set aside for tax</div>
       </div>
     </div>
@@ -649,7 +641,7 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
   <div class="card" style="text-align:center;padding:24px 18px">
     <div style="font-size:42px;margin-bottom:8px">🛠️</div>
     <h2 style="margin-bottom:6px">How this app works</h2>
-    <p class="muted" style="font-size:14px;max-width:380px;margin:0 auto">For tradies. Your books. Your phone. No accountant fees. No subscription. Nothing leaves this device.</p>
+    <p class="muted" style="font-size:14px;max-width:380px;margin:0 auto">For tradies. Your books. Your phone. No accountant fees. not subscription-based. Nothing leaves this device.</p>
   </div>
 
   <div class="card">
@@ -686,7 +678,7 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
     <h3 style="margin-bottom:8px">🚐 Driving for work?</h3>
     <p style="font-size:14px;line-height:1.55">Every mile in the van counts as expense. <b>45p per mile</b> off your tax bill (first 10,000 miles).</p>
     <p style="font-size:14px;line-height:1.55;margin-top:6px">Tap <b>"🚐 Log mileage"</b> on Home. Quick: from → to → miles. Even short trips add up.</p>
-    <p class="muted" style="font-size:12px;margin-top:8px">💡 28 miles to a job = £12.60 off your tax. Do it every day for a year = £3,000+ saved.</p>
+    <p class="muted" style="font-size:12px;margin-top:8px">💡 28 miles to a job = TBA off your tax. Do it every day for a year = TBA+ saved.</p>
   </div>
 
   <div class="card" style="border:2px solid var(--red)">
@@ -716,7 +708,7 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
 
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
       <b style="font-size:14px">What's VAT?</b>
-      <p class="muted" style="font-size:13px;line-height:1.5;margin-top:4px">Only kicks in if you bill <b>more than £90,000 a year</b>. Most one-person trades don't hit that. If you do, set it in <b>Tax → Settings</b>.</p>
+      <p class="muted" style="font-size:13px;line-height:1.5;margin-top:4px">Only kicks in if you bill <b>more than TBA a year</b>. Most one-person trades don't hit that. If you do, set it in <b>Tax → Settings</b>.</p>
     </div>
 
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
@@ -776,16 +768,16 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
     <h2>Your tax position</h2>
     <p class="muted" style="margin-bottom:12px;font-size:13px">UK sole trader · 2025/26 thresholds · figures update live as you log income & expenses</p>
 
-    <div class="row"><span class="lbl">Income</span><span class="val green" id="taxIncome">£0</span></div>
-    <div class="row"><span class="lbl">Expenses</span><span class="val" id="taxExpenses">£0</span></div>
-    <div class="row"><span class="lbl">Mileage allowance</span><span class="val" id="taxMileage">£0</span></div>
-    <div class="row"><span class="lbl">CIS deductions taken</span><span class="val" id="taxCIS">£0</span></div>
-    <div class="row"><span class="lbl">Taxable profit</span><span class="val gold" id="taxProfit">£0</span></div>
-    <div class="row"><span class="lbl">Income tax estimate</span><span class="val red" id="taxIT">£0</span></div>
-    <div class="row"><span class="lbl">NI Class 4 estimate</span><span class="val red" id="taxNI">£0</span></div>
-    <div class="row"><span class="lbl">Less CIS credit</span><span class="val green" id="taxCISCredit">£0</span></div>
-    <div class="row"><span class="lbl"><b>Total to set aside</b></span><span class="val red" id="taxTotal" style="font-size:18px">£0</span></div>
-    <div class="row"><span class="lbl">Per month from now</span><span class="val gold" id="taxMonthly">£0</span></div>
+    <div class="row"><span class="lbl">Income</span><span class="val green" id="taxIncome">TBA</span></div>
+    <div class="row"><span class="lbl">Expenses</span><span class="val" id="taxExpenses">TBA</span></div>
+    <div class="row"><span class="lbl">Mileage allowance</span><span class="val" id="taxMileage">TBA</span></div>
+    <div class="row"><span class="lbl">CIS deductions taken</span><span class="val" id="taxCIS">TBA</span></div>
+    <div class="row"><span class="lbl">Taxable profit</span><span class="val gold" id="taxProfit">TBA</span></div>
+    <div class="row"><span class="lbl">Income tax estimate</span><span class="val red" id="taxIT">TBA</span></div>
+    <div class="row"><span class="lbl">NI Class 4 estimate</span><span class="val red" id="taxNI">TBA</span></div>
+    <div class="row"><span class="lbl">Less CIS credit</span><span class="val green" id="taxCISCredit">TBA</span></div>
+    <div class="row"><span class="lbl"><b>Total to set aside</b></span><span class="val red" id="taxTotal" style="font-size:18px">TBA</span></div>
+    <div class="row"><span class="lbl">Per month from now</span><span class="val gold" id="taxMonthly">TBA</span></div>
   </div>
 
   <div class="card">
@@ -818,7 +810,7 @@ nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-2); bo
     <div class="field">
       <label>VAT registered?</label>
       <select id="setVAT">
-        <option value="none">No (under £90k threshold)</option>
+        <option value="none">No (under TBAk threshold)</option>
         <option value="standard">Standard rate (20%)</option>
         <option value="flatrate">Flat rate scheme (9.5% labour-only build)</option>
         <option value="flatrate14">Flat rate scheme (14.5% general construction)</option>
@@ -885,8 +877,7 @@ const TAX = {
   carRate2: 0.25,           // after 10k
   carThreshold: 10000,
   // VAT
-  vatThreshold: 90000,
-};
+  vatThreshold: 90000};
 
 // ═══ STATE ═══
 let state = {
@@ -899,10 +890,8 @@ let state = {
     cis: 'none',
     vat: 'none',
     brand: { name: 'FallAccount Trades', mark: 'F', sub: 'sole trader · UK' },
-    geminiKey: '',
-  },
-  meta: { created: Date.now(), version: VERSION },
-};
+    geminiKey: ''},
+  meta: { created: Date.now(), version: VERSION }};
 
 // ═══ STORAGE — IndexedDB with localStorage fallback ═══
 let db = null;
@@ -994,15 +983,14 @@ const RECEIPT_PATTERNS = [
   { match: /shell|bp\b|esso|tesco\s*fuel|sainsbury.*fuel|asda\s*fuel|texaco|gulf/i, vendor: 'Fuel', category: 'fuel' },
   { match: /\bvan\b|mot\b|service|garage|tyre|kwik\s*fit/i, vendor: 'Vehicle', category: 'vehicle' },
   { match: /workwear|safety\s*boot|hi[\s-]*vis|hard\s*hat|ppe|dickies|carhartt/i, vendor: 'PPE/workwear', category: 'ppe' },
-  { match: /cafe|costa|gregg|coffee|breakfast/i, vendor: 'Site refreshment', category: 'site' },
-];
+  { match: /cafe|costa|gregg|coffee|breakfast/i, vendor: 'Site refreshment', category: 'site' }];
 
 function parseReceiptText(text) {
   const t = (text || '').trim();
   const out = { vendor: '', amount: 0, category: 'other', date: today(), notes: '' };
 
   // Find amount — biggest £ figure or last number
-  const amounts = [...t.matchAll(/£?\s*(\d{1,5}(?:[.,]\d{2})?)/g)].map(m => parseFloat(m[1].replace(',', '.'))).filter(n => n > 0);
+  const amounts = [...t.matchAll(/£?\s*(\d{1,5}(?:[.]\d{2})?)/g)].map(m => parseFloat(m[1].replace(',', '.'))).filter(n => n > 0);
   if (amounts.length) out.amount = Math.max(...amounts);
 
   // Find date
@@ -1094,8 +1082,7 @@ function renderDash() {
     ...state.receipts.map(r => ({ type: 'receipt', date: r.date, title: r.vendor, amount: -r.amount, ref: r.id })),
     ...state.income.map(i => ({ type: 'income', date: i.date, title: i.customer || 'Payment received', amount: +i.amount, ref: i.id })),
     ...state.invoices.filter(i => i.paid).map(i => ({ type: 'invoice', date: i.paidDate || i.date, title: 'Invoice paid · ' + (i.customer || ''), amount: +i.amount, ref: i.id })),
-    ...state.mileage.map(m => ({ type: 'mileage', date: m.date, title: m.from + ' → ' + m.to, amount: 0, miles: m.miles, ref: m.id })),
-  ].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 6);
+    ...state.mileage.map(m => ({ type: 'mileage', date: m.date, title: m.from + ' → ' + m.to, amount: 0, miles: m.miles, ref: m.id }))].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 6);
 
   const rcRoot = document.getElementById('dashRecent');
   if (!recent.length) {
@@ -1119,10 +1106,10 @@ function renderDash() {
   const warnBody = document.getElementById('dashTaxWarnBody');
   if (t.profit > 45000 && t.profit < TAX.basicBand + TAX.personalAllowance) {
     warnBox.style.display = 'block';
-    warnBody.innerHTML = `<div class="warn">You're approaching the higher rate threshold (£50,270 profit). After that, you pay 40% on every extra pound.</div>`;
+    warnBody.innerHTML = `<div class="warn">You're approaching the higher rate threshold (TBA profit). After that, you pay 40% on every extra pound.</div>`;
   } else if (t.income > TAX.vatThreshold * 0.85 && state.settings.vat === 'none') {
     warnBox.style.display = 'block';
-    warnBody.innerHTML = `<div class="warn">Your income is approaching the VAT threshold (£90,000). You'll need to register soon. Tap Tax → Settings to enable VAT.</div>`;
+    warnBody.innerHTML = `<div class="warn">Your income is approaching the VAT threshold (TBA). You'll need to register soon. Tap Tax → Settings to enable VAT.</div>`;
   } else {
     warnBox.style.display = 'none';
   }
@@ -1421,8 +1408,7 @@ async function saveReceipt() {
     category: document.getElementById('rcCategory').value,
     date: document.getElementById('rcDate').value || today(),
     notes: document.getElementById('rcNotes').value,
-    jobId: document.getElementById('rcJob')?.value || '',
-  };
+    jobId: document.getElementById('rcJob')?.value || ''};
   const existing = state.receipts.findIndex(x => x.id === id);
   if (existing >= 0) state.receipts[existing] = r; else state.receipts.push(r);
   await saveState();
@@ -1473,8 +1459,7 @@ async function saveMileage() {
     to: document.getElementById('mlTo').value.trim(),
     miles: +document.getElementById('mlMiles').value || 0,
     date: document.getElementById('mlDate').value || today(),
-    jobId: document.getElementById('mlJob')?.value || '',
-  };
+    jobId: document.getElementById('mlJob')?.value || ''};
   if (!m.miles) { toast('Enter miles'); return; }
   state.mileage.push(m);
   await saveState();
@@ -1553,8 +1538,7 @@ async function saveJob() {
     labour: +document.getElementById('jbLabour').value || 0,
     status: document.getElementById('jbStatus').value,
     notes: document.getElementById('jbNotes').value,
-    created: existing?.created || Date.now(),
-  };
+    created: existing?.created || Date.now()};
   if (existing) Object.assign(existing, j); else state.jobs.push(j);
   await saveState();
   closeModal();
@@ -1621,9 +1605,9 @@ function showInvoiceModal(existing) {
     <div class="field" style="margin-top:16px"><label>CIS deduction (${state.settings.cis}%)</label><input id="invCIS" type="number" step="0.01" value="${i.cisDeducted}" placeholder="auto-calculated"></div>` : ''}
     <div class="field"><label>Payment terms / notes</label><textarea id="invNotes">${escHTML(i.notes)}</textarea></div>
     <div class="card" style="margin-top:12px">
-      <div class="row"><span class="lbl">Subtotal</span><span class="val" id="invSubtotal">£0</span></div>
-      ${state.settings.cis !== 'none' ? '<div class="row"><span class="lbl">Less CIS</span><span class="val" id="invCISVal">£0</span></div>' : ''}
-      <div class="row"><span class="lbl">Total due</span><span class="val gold" id="invTotal">£0</span></div>
+      <div class="row"><span class="lbl">Subtotal</span><span class="val" id="invSubtotal">TBA</span></div>
+      ${state.settings.cis !== 'none' ? '<div class="row"><span class="lbl">Less CIS</span><span class="val" id="invCISVal">TBA</span></div>' : ''}
+      <div class="row"><span class="lbl">Total due</span><span class="val gold" id="invTotal">TBA</span></div>
     </div>
     <input type="hidden" id="invId" value="${i.id}">
     <input type="hidden" id="invJobId" value="${i.jobId || ''}">
@@ -1704,8 +1688,7 @@ async function saveInvoice() {
     jobId: document.getElementById('invJobId').value,
     sent: existing?.sent || false,
     paid: existing?.paid || false,
-    paidDate: existing?.paidDate || '',
-  };
+    paidDate: existing?.paidDate || ''};
   if (existing) Object.assign(existing, inv); else state.invoices.push(inv);
   // Update linked job
   if (inv.jobId) {
@@ -1760,8 +1743,7 @@ function printInvoice() {
       customer: document.getElementById('invCustomer').value,
       address: document.getElementById('invAddress').value,
       lines, cisDeducted, amount: subtotal - cisDeducted, subtotal,
-      notes: document.getElementById('invNotes').value,
-    };
+      notes: document.getElementById('invNotes').value};
   }
   const html = invoiceHTML(inv);
   const w = window.open('', '_blank');
@@ -1851,8 +1833,7 @@ async function saveIncome() {
     amount: +document.getElementById('incAmount').value || 0,
     date: document.getElementById('incDate').value || today(),
     cisDeducted: +document.getElementById('incCIS')?.value || 0,
-    notes: document.getElementById('incNotes').value,
-  };
+    notes: document.getElementById('incNotes').value};
   if (!i.amount) { toast('Enter amount'); return; }
   state.income.push(i);
   await saveState();
@@ -1895,8 +1876,7 @@ function generateMTD() {
     Q1: ['04-06', '07-05'],
     Q2: ['07-06', '10-05'],
     Q3: ['10-06', '01-05'],
-    Q4: ['01-06', '04-05'],
-  };
+    Q4: ['01-06', '04-05']};
   const t = calcTax();
   const [start, end] = ranges[q];
   const income = state.income.filter(i => inQuarter(i.date, q)).reduce((s, i) => s + i.amount, 0)
@@ -2102,8 +2082,7 @@ Object.assign(window.Cascade, {
     try {
       const r = await Promise.race([
         fetch('http://127.0.0.1:11434/api/tags').then(r => r.ok),
-        new Promise(res => setTimeout(() => res(false), 400)),
-      ]);
+        new Promise(res => setTimeout(() => res(false), 400))]);
       Cascade._localProbed = !!r;
     } catch (e) { Cascade._localProbed = false; }
     return Cascade._localProbed;
@@ -2177,10 +2156,8 @@ Object.assign(window.Cascade, {
     if (!window.webllm || !window.webllm.chat) return null;
     return await window.webllm.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 800,
-    }).then(r => r.choices?.[0]?.message?.content || '');
-  },
-});
+      max_tokens: 800}).then(r => r.choices?.[0]?.message?.content || '');
+  }});
 var Cascade = window.Cascade;
 
 // ═══ KCC · contribution ledger · silent ═══
@@ -2196,8 +2173,7 @@ const KCC = {
     const s = { R0: 0, R1: 0, R2: 0, R3: 0, R4: 0, R5: 0, R6: 0 };
     (state.kcc || []).forEach(e => { if (s[e.ring] !== undefined) s[e.ring] += e.weight; });
     return s;
-  },
-};
+  }};
 
 // ═══ ASK THE BOOKS · NL query router ═══
 // T0 always works · upgrades transparently if T1+ available
@@ -2376,10 +2352,10 @@ function buildInsights() {
   // tax threshold warnings
   const t = calcTax();
   if (t.profit > 45000 && t.profit < 50270) insights.push({ severity: 'warn', msg: `You're <b>${money(50270 - t.profit)}</b> from the 40% tax bracket. After that, every extra pound is taxed at 40%.` });
-  if (t.income > 76500 && state.settings.vat === 'none') insights.push({ severity: 'warn', msg: `Income approaching VAT threshold (£90k). <b>${money(90000 - t.income)}</b> headroom left. <a onclick="switchView(\'tax\')" style="color:var(--gold);cursor:pointer">Settings →</a>` });
+  if (t.income > 76500 && state.settings.vat === 'none') insights.push({ severity: 'warn', msg: `Income approaching VAT threshold (TBAk). <b>${money(90000 - t.income)}</b> headroom left. <a onclick="switchView(\'tax\')" style="color:var(--gold);cursor:pointer">Settings →</a>` });
   // missing-job-link receipts (top 5 by amount with no job)
   const orphan = state.receipts.filter(r => !r.jobId && r.amount > 50);
-  if (orphan.length > 5) insights.push({ severity: 'info', msg: `<b>${orphan.length} receipts</b> over £50 not linked to any job — link them to improve per-job profit tracking.` });
+  if (orphan.length > 5) insights.push({ severity: 'info', msg: `<b>${orphan.length} receipts</b> over TBA not linked to any job — link them to improve per-job profit tracking.` });
 
   const card = document.getElementById('insightsCard');
   const body = document.getElementById('insightsBody');
@@ -2424,8 +2400,7 @@ window.KONOMI = {
   tier: 'sovereign',
   trial: false,
   licenceId: null,
-  check: () => ({ ok: true, tier: 'sovereign', note: 'Single-file sovereign build · no licence gate' }),
-};
+  check: () => ({ ok: true, tier: 'sovereign', note: 'Single-file sovereign build · no licence gate' })};
 
 // ═══ FALLMESH SHIM ═══
 try {

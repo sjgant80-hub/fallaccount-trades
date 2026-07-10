@@ -6,7 +6,7 @@
 
 One HTML file. Opens in any browser. Lives on your phone. Your data never leaves your device.
 
-No subscription. No login. No cloud. No telemetry. No nonsense.
+not subscription-based. No login. No cloud. No telemetry. No nonsense.
 
 **Live demo:** _drop your GitHub Pages URL here once enabled_
 
@@ -18,7 +18,7 @@ No subscription. No login. No cloud. No telemetry. No nonsense.
 |----------|------|-------------|
 | 📸 Snap a receipt | 5 sec | Photo at Screwfix → auto-categorised → logged |
 | 🚐 Log a journey | 10 sec | "Mr Smith's → Travis Perkins, 12 miles" → HMRC rate auto-calculated |
-| 🔨 Start a job | 30 sec | "Kitchen refit — Mr Smith, £4,500 quoted" |
+| 🔨 Start a job | 30 sec | "Kitchen refit — Mr Smith, TBA quoted" |
 | 📤 Invoice it | 1 min | Job marked done → invoice generated → CIS deducted automatically |
 | £ Tax position | live | Income, expenses, mileage, CIS — running total all year |
 | 📑 MTD quarterly | 2 min | Pick the quarter → generate the figures → download |
@@ -104,13 +104,13 @@ Got mates who'd want one? Three options:
 ### Option 1 — free favour
 Help your mate make their own copy. Five minutes of clicking. They get their own version with their brand name on it. You earn a beer.
 
-### Option 2 — set it up for them (£50–£100 cash)
+### Option 2 — set it up for them (TBA–TBA cash)
 - Fork this repo to a new repo with their name (e.g. `dave-plastering/my-accounts`)
 - Drop their logo / brand in via Settings
 - Enable GitHub Pages on their repo
 - Send them the link to bookmark
 - Hand them a printed copy of the [intro doc](FOR-IVAN.md)
-- An hour's work · cash in hand · they get a tool they'd otherwise pay £30/month forever
+- An hour's work · cash in hand · they get a tool they'd otherwise pay TBAnth forever
 
 ### Option 3 — refer them
 Send them to whoever made yours. They'll get one set up. You earn a credit.

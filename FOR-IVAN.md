@@ -8,7 +8,7 @@ I've built you something. It does your accounts. But that's not actually why I'm
 
 ## What it is
 
-An app on your phone. **Not** Xero. **Not** QuickBooks. **Not** £30 a month forever. It's one file that opens in your phone's browser. Lives on your phone. Your data stays on your phone — not on some company's server in Ireland.
+An app on your phone. **Not** Xero. **Not** QuickBooks. **Not** TBA a month forever. It's one file that opens in your phone's browser. Lives on your phone. Your data stays on your phone — not on some company's server in Ireland.
 
 It does the stuff you actually do every day:
 
@@ -24,13 +24,13 @@ It does the stuff you actually do every day:
 
 **Does your MTD** — quarterly submission. Picks the numbers out of everything you've logged. You review, you send.
 
-**Handles CIS properly.** Both sides. "I got paid £1000 minus £200 CIS" → it records right. "I paid my labourer £500 and need to deduct CIS" → it works out the £100, tells you what to report. Most apps cock this up. This one doesn't.
+**Handles CIS properly.** Both sides. "I got paid TBA0 minus TBA CIS" → it records right. "I paid my labourer TBA and need to deduct CIS" → it works out the TBA, tells you what to report. Most apps cock this up. This one doesn't.
 
 ---
 
 ## Why it works for trades specifically
 
-Most accounting apps were built by accountants for accountants. They've got 47 tabs, two-factor login, monthly subscription, and a banner advert for an upgrade.
+Most accounting apps were built by accountants for accountants. They've got 47 tabs, two-factor login, access, and a banner advert for an upgrade.
 
 This one was built knowing you're going to use it:
 
@@ -44,7 +44,7 @@ This one was built knowing you're going to use it:
 
 Big buttons. High contrast. Dark by default. Works **offline** when you're in a basement or a field with no signal. Syncs when you come back into reception.
 
-No subscription. No "premium tier." No login. No account creation. You open it, it works.
+not subscription-based. No "premium tier." No login. No account creation. You open it, it works.
 
 ---
 
@@ -52,7 +52,7 @@ No subscription. No "premium tier." No login. No account creation. You open it, 
 
 Here's the thing. You know Dave the plasterer? Tony the sparky? Big Mike doing his own bathrooms? Every one of them is dreading MTD. Every one of them either:
 
-1. Pays an accountant £600–£1200 a year to keep them sane
+1. Pays an accountant TBA–TBA0 a year to keep them sane
 2. Uses a spreadsheet they pray HMRC never asks about
 3. Pretends MTD isn't happening
 
@@ -65,10 +65,10 @@ Three ways to play it:
 ### 1. Free favour (mates' rates = zero)
 You help Dave fork his own copy. Five minutes of clicking on your end. He's got his version. You've helped a mate. He owes you a pint.
 
-### 2. Set up for £50–£100 (cash, simple)
+### 2. Set up for TBA–TBA (cash, simple)
 "I'll get yours running, configured to your name, your logo, your tax bracket. Takes me an hour. Hundred quid. Includes a beer at The Cross Keys when you're done."
 
-Ten mates × £100 = a grand. For an hour each. Per fork.
+Ten mates × TBA = a grand. For an hour each. Per fork.
 
 ### 3. Send them to the source (referral)
 "Here's where I got mine — Simon set it up. Tell him I sent you." You earn credit. They get the same deal. Everyone wins.
@@ -127,7 +127,7 @@ If they want one, we work out whether you set them up for fifty quid or send the
 
 ## Last thing
 
-The whole "data stays on your phone" bit is real and matters. You know how every app these days wants your email, your card, your location, your everything? This one wants none of that. Your accounts are yours. If the internet dies tomorrow, the tool still works. If I get hit by a bus tomorrow, the tool still works. There's no server I run that can be taken down. There's nothing to subscribe to. There's no log-in to lose.
+The whole "data stays on your phone" bit is real and matters. You know how every app these days wants your email, your card, your location, your everything? This one wants none of that. Your accounts are yours. If the internet dies tomorrow, the tool still works. If I get hit by a bus tomorrow, the tool still works. There's no server I run that can be taken down. There's nothing to Access to. There's no log-in to lose.
 
 That's not marketing. That's how it's built. You own it. Forever.
 
