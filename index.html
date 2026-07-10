@@ -1806,7 +1806,26 @@ function invoiceHTML(inv) {
       <div class="row grand"><span>Total due</span><span>${money(inv.amount)}</span></div>
     </div>
     ${inv.notes ? `<div style="margin-top:32px;border-top:1px solid #ddd;padding-top:16px;color:#666">${escHTML(inv.notes).replace(/\n/g,'<br>')}</div>` : ''}
-  </body></html>`;
+  
+
+<!-- ═══════════════════════ AUTOPILOT · fall-autopilot-kit ═══════════════════════ -->
+<script type="module">
+  try {
+    const { installAutopilot } = await import('https://sjgant80-hub.github.io/fall-autopilot-kit/src/autopilot.js');
+    const manifestRes = await fetch('https://sjgant80-hub.github.io/fall-autopilot-kit/manifests/fallaccount-trades.json');
+    const manifest = await manifestRes.json();
+    manifest.actions = manifest.actions.map(a => ({ ...a, run: async (params) => {
+      const fn = window._app?.[a.id];
+      if (typeof fn === 'function') return fn(params);
+      alert('Autopilot proposes: ' + a.name + ' · params: ' + JSON.stringify(params) + '\n\nThis tool has not yet implemented the ' + a.id + ' handler. Proposal logged to audit.');
+      return { stub: true, action: a.id, params };
+    }}));
+    manifest.state = () => ({ ...(window._app || {}), now: new Date().toISOString() });
+    installAutopilot(manifest);
+  } catch (e) { console.warn('[autopilot] init failed:', e); }
+</script>
+
+</body></html>`;
 }
 
 // ═══ INCOME (got paid directly, no invoice) ═══
