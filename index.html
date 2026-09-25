@@ -15,6 +15,7 @@
   --bg-2: #23231f;
   --bg-3: #2d2d28;
   --line: #3a3a33;
+  --border: #3a3a33;
   --text: #f5f1e8;
   --muted: #948f80;
   --gold: #e8a012;
@@ -1789,7 +1790,7 @@ function invoiceHTML(inv) {
     </div>
     ${inv.notes ? `<div style="margin-top:32px;border-top:1px solid #ddd;padding-top:16px;color:#666">${escHTML(inv.notes).replace(/\n/g,'<br>')}</div>` : ''}
   
-
+
 </body></html>`;
 }
 
